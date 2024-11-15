@@ -4,14 +4,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-class RegistrationPage extends StatefulWidget {
-  const RegistrationPage({super.key});
+class Adminregistration extends StatefulWidget {
+  const Adminregistration({super.key});
 
   @override
-  _RegistrationPageState createState() => _RegistrationPageState();
+  State<Adminregistration> createState() => _AdminregistrationState();
 }
 
-class _RegistrationPageState extends State<RegistrationPage> {
+class _AdminregistrationState extends State<Adminregistration> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -38,7 +38,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           .set({
         'email': _emailController.text,
         'name': _nameController.text,
-        'role1': 'client', // Assign role as "client"
+        'role2': 'admin', // Assign role as "client"
       });
 
       // Close loading indicator
@@ -97,7 +97,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         FirebaseFirestore.instance.collection('Users').doc(userCredential.user!.email).set({
           'email': userCredential.user!.email,
           'name': userCredential.user!.displayName,
-          'role1': 'client', // Assign role as "client"
+          'role2': 'admin', // Assign role as "admin"
         });
       }
 
@@ -107,13 +107,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
       );
 
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('An error occurred. Please try again.')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google Sign-Up failed. Please try again.')),
+      );
     }
-
   }
 
   @override
@@ -123,7 +120,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       appBar: AppBar(
         backgroundColor: Colors.grey[300],
         title: Text(
-          'Registration Page',
+          'Admin Registration Page',
           style: GoogleFonts.mulish(
             fontWeight: FontWeight.bold,
           ),

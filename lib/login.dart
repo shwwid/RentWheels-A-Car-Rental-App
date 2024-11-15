@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:rentwheels/components/square_tile.dart';
 import 'package:rentwheels/components/my_textfield.dart';
 import 'package:rentwheels/components/button.dart';
+import 'package:rentwheels/host_login.dart';
 import 'package:rentwheels/registration.dart';
-//import 'package:rentwheels/host_login.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rentwheels/services/auth_google.dart';
 import 'package:rentwheels/forgotpasswordpage.dart';
@@ -264,7 +264,7 @@ void wrongPasswordMessage() {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Want to become a Host?',
+                      'Admin?',
                       style: TextStyle(color: Colors.grey[700]),
                     ),
                     const SizedBox(width: 4),
@@ -272,11 +272,11 @@ void wrongPasswordMessage() {
                       onTap: () {
                         Navigator.push(context,
                           MaterialPageRoute(
-                              builder: (context) => RegistrationPage()),
+                              builder: (context) => HostLoginPage()),
                         );
                       },
                       child: const Text(
-                        'Register',
+                        'Tap here to Sign-In',
                         style: TextStyle(
                           color: Color.fromARGB(255, 0, 0, 255),
                           fontWeight: FontWeight.bold,

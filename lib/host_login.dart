@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:rentwheels/adminRegistration.dart';
 import 'package:rentwheels/components/square_tile.dart';
 import 'package:rentwheels/components/my_textfield.dart';
 import 'package:rentwheels/components/host_button.dart';
-import 'package:rentwheels/registration.dart';
+import 'package:rentwheels/constants.dart';
+import 'package:rentwheels/services/auth_google.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class HostLoginPage extends StatelessWidget {
   HostLoginPage({super.key});
@@ -24,17 +27,29 @@ class HostLoginPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 50),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: Icon(
-                      Icons.arrow_back_ios,
-                      color: Colors.black,
-                      size: 28
+                // Go Back button at the top left corner
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 16.0, top: 16.0),
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        'Go Back as User',
+                        style: GoogleFonts.mulish(
+                          color: kPrimaryColor,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
+
+                const SizedBox(height: 30),
 
                 // logo
                 const Text(
@@ -44,7 +59,6 @@ class HostLoginPage extends StatelessWidget {
                     fontSize: 50,
                     fontWeight: FontWeight.bold,
                   ),
-
                 ),
 
                 const SizedBox(height: 10),
@@ -97,7 +111,6 @@ class HostLoginPage extends StatelessWidget {
                 // sign in button
                 host_button(
                   onTap: signUserIn,
-
                 ),
 
                 const SizedBox(height: 50),
@@ -133,12 +146,14 @@ class HostLoginPage extends StatelessWidget {
                 const SizedBox(height: 50),
 
                 // google
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SquareTile(imagePath: 'assets/images/google.png'),
-
-                    SizedBox(width: 10),
+                    SquareTile(
+                      onTap: () => AuthGoogle().signInWithGoogle(),
+                      imagePath: 'assets/images/google.png',
+                    ),
+                    const SizedBox(width: 10),
                   ],
                 ),
 
@@ -155,9 +170,11 @@ class HostLoginPage extends StatelessWidget {
                     const SizedBox(width: 4),
                     GestureDetector(
                       onTap: () {
-                        Navigator.push(context,
+                        Navigator.push(
+                          context,
                           MaterialPageRoute(
-                              builder: (context) => RegistrationPage()),
+                            builder: (context) => Adminregistration(),
+                          ),
                         );
                       },
                       child: const Text(
@@ -170,33 +187,6 @@ class HostLoginPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                /*const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Admin?',
-                      style: TextStyle(color: Colors.grey[700]),
-                    ),
-                    const SizedBox(width: 4),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(context,
-                          MaterialPageRoute(
-                              builder: (context) => RegistrationPage()),
-                        );
-                      },
-                      child: const Text(
-                        'Tap Here',
-                        style: TextStyle(
-                          color: Color.fromARGB(255, 0, 0, 255),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),*/
-
               ],
             ),
           ),
