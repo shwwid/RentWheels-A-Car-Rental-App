@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "62538751675",
+    "project_id": "rentwheels-32bd9",
+    "storage_bucket": "rentwheels-32bd9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:62538751675:android:c1249ad42e97f3b617139e",
+        "android_client_info": {
+          "package_name": "com.example.rentwheels.rentwheels"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFaMzkboSAZCiBPhDXHZuoCENFZId69zg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
