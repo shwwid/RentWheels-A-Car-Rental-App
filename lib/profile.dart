@@ -31,45 +31,41 @@ class _ProfileState extends State<Profile> {
         ),
         content: TextField(
           autofocus: true,
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: "Enter New $field",
-            hintStyle: TextStyle(color: Colors.grey),
+            hintStyle: const TextStyle(color: Colors.grey),
           ),
           onChanged: (value) {
             newValue = value;
           },
         ),
         actions: [
-          // Cancel
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.white)),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white)),
           ),
-          // Save
           TextButton(
             onPressed: () async {
               if (newValue.isNotEmpty) {
-                // Update the name in Firestore
                 try {
                   await FirebaseFirestore.instance
                       .collection("Users")
                       .doc(currentuser.email)
-                      .update({'name': newValue});
+                      .update({field.toLowerCase(): newValue});
 
-                  // Show success message
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Name updated successfully!')),
+                    const SnackBar(content: Text('Field updated successfully!')),
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to update name. Please try again.')),
+                    const SnackBar(content: Text('Failed to update. Please try again.')),
                   );
                 }
               }
-              Navigator.pop(context); // Close the dialog after saving
+              Navigator.pop(context);
             },
-            child: Text('Save', style: TextStyle(color: Colors.white)),
+            child: const Text('Save', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -88,9 +84,9 @@ class _ProfileState extends State<Profile> {
         ),
         content: TextField(
           autofocus: true,
-          style: TextStyle(color: Colors.white),
-          keyboardType: TextInputType.phone, // Phone number keyboard
-          decoration: InputDecoration(
+          style: const TextStyle(color: Colors.white),
+          keyboardType: TextInputType.phone,
+          decoration: const InputDecoration(
             hintText: "Enter New Phone Number",
             hintStyle: TextStyle(color: Colors.grey),
           ),
@@ -99,35 +95,31 @@ class _ProfileState extends State<Profile> {
           },
         ),
         actions: [
-          // Cancel
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: Colors.white)),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white)),
           ),
-          // Save
           TextButton(
             onPressed: () async {
               if (newPhoneNumber.isNotEmpty) {
                 try {
-                  // Update the phone number in Firestore
                   await FirebaseFirestore.instance
                       .collection("Users")
                       .doc(currentuser.email)
                       .update({'phone_number': newPhoneNumber});
 
-                  // Show success message
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Phone number updated successfully!')),
+                    const SnackBar(content: Text('Phone number updated successfully!')),
                   );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to update phone number. Please try again.')),
+                    const SnackBar(content: Text('Failed to update phone number. Please try again.')),
                   );
                 }
               }
-              Navigator.pop(context); // Close the dialog after saving
+              Navigator.pop(context);
             },
-            child: Text('Save', style: TextStyle(color: Colors.white)),
+            child: const Text('Save', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -136,17 +128,21 @@ class _ProfileState extends State<Profile> {
 
   Future<void> deleteAccount() async {
     try {
+      await FirebaseFirestore.instance
+          .collection("Users")
+          .doc(currentuser.email)
+          .delete();
+
       await FirebaseAuth.instance.currentUser!.delete();
-      // Sign out the user after deleting the account
       await FirebaseAuth.instance.signOut();
-      // Show confirmation message
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Account deleted successfully!')),
+        const SnackBar(content: Text('Account deleted successfully!')),
       );
-      // Navigate the user to the login or splash screen
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => LoginPage()), // Replace with your login page
+        MaterialPageRoute(builder: (context) => LoginPage()),
       );
     } on FirebaseAuthException catch (e) {
       String errorMessage;
@@ -157,6 +153,10 @@ class _ProfileState extends State<Profile> {
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to delete account from Firestore. Please try again.')),
       );
     }
   }
@@ -172,12 +172,12 @@ class _ProfileState extends State<Profile> {
         ),
         leading: IconButton(
           color: Colors.black,
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
-        titleTextStyle: TextStyle(
+        titleTextStyle: const TextStyle(
           color: Colors.black,
           fontWeight: FontWeight.bold,
         ),
@@ -187,22 +187,32 @@ class _ProfileState extends State<Profile> {
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance.collection("Users").doc(currentuser.email).snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final userData = snapshot.data!.data() as Map<String, dynamic>;
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return const Center(child: Text('Error loading data'));
+          }
+
+          if (snapshot.hasData && snapshot.data != null) {
+            final userData = snapshot.data!.data() as Map<String, dynamic>?;
+
+            if (userData == null) {
+              return const Center(child: Text('No user data found'));
+            }
 
             return Stack(
               children: [
                 ListView(
                   children: [
                     const SizedBox(height: 50),
-                    // Profile pic
                     Icon(
                       Icons.person,
                       color: Colors.grey[800],
                       size: 72,
                     ),
                     const SizedBox(height: 20),
-                    // Email (centered)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10.0),
                       child: Text(
@@ -214,7 +224,7 @@ class _ProfileState extends State<Profile> {
                     const SizedBox(height: 40),
                     Padding(
                       padding: const EdgeInsets.only(left: 25.0),
-                      child: Text(
+                      child: const Text(
                         'My details',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
@@ -222,30 +232,27 @@ class _ProfileState extends State<Profile> {
                         ),
                       ),
                     ),
-                    // Name
                     MyTextBox(
                       text: userData['name'] ?? 'No Name',
                       sectionName: 'Name',
                       onPressed: () => editField('Name'),
                     ),
-                    // Phone Number
                     MyTextBox(
-                      text: userData['phone_number'] ?? 'No Phone Number', // Show phone number
+                      text: userData['phone_number'] ?? 'No Phone Number',
                       sectionName: 'Phone Number',
-                      onPressed: () => editPhoneNumber(), // Open dialog for phone number
+                      onPressed: () => editPhoneNumber(),
                     ),
-                    // Update Name button
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 32, 81, 203), // Red background color
-                          padding: EdgeInsets.symmetric(vertical: 12.0),
+                          backgroundColor: const Color.fromARGB(255, 32, 81, 203),
+                          padding: const EdgeInsets.symmetric(vertical: 12.0),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.0),
                           ),
                         ),
-                        onPressed: () => editField('Name'), // Open the dialog to edit name
+                        onPressed: () => editField('Name'),
                         child: Text(
                           'Update Name',
                           style: GoogleFonts.mulish(
@@ -256,18 +263,17 @@ class _ProfileState extends State<Profile> {
                         ),
                       ),
                     ),
-                    // Update Phone Number button
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 32, 81, 203), // Red background color
-                          padding: EdgeInsets.symmetric(vertical: 12.0),
+                          backgroundColor: const Color.fromARGB(255, 32, 81, 203),
+                          padding: const EdgeInsets.symmetric(vertical: 12.0),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.0),
                           ),
                         ),
-                        onPressed: () => editPhoneNumber(), // Open dialog for phone number
+                        onPressed: () => editPhoneNumber(),
                         child: Text(
                           'Update Phone Number',
                           style: GoogleFonts.mulish(
@@ -278,13 +284,12 @@ class _ProfileState extends State<Profile> {
                         ),
                       ),
                     ),
-                    // Delete Account Button
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0), // Reduced vertical padding
+                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 207, 66, 56), // Red background color
-                          padding: EdgeInsets.symmetric(vertical: 12.0),
+                          backgroundColor: const Color.fromARGB(255, 207, 66, 56),
+                          padding: const EdgeInsets.symmetric(vertical: 12.0),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12.0),
                           ),
@@ -295,7 +300,7 @@ class _ProfileState extends State<Profile> {
                           style: GoogleFonts.mulish(
                             fontSize: 16.0,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -306,7 +311,7 @@ class _ProfileState extends State<Profile> {
             );
           }
 
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: Text('User data not found'));
         },
       ),
     );
