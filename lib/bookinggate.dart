@@ -1,12 +1,16 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:rentwheels/constants.dart';
+import 'package:rentwheels/data.dart';
 
 class BookingGateway extends StatefulWidget {
-  final String carName;
-  final double basePrice; // Base price for the car
+  final Car car;
+  final int basePrice; // Base price for the car
 
   const BookingGateway({
     super.key,
-    required this.carName,
+    required this.car,
     required this.basePrice,
   });
 
@@ -16,7 +20,10 @@ class BookingGateway extends StatefulWidget {
 
 class _BookingGatewayState extends State<BookingGateway> {
   bool isDelivery = false; // Toggle for self-pick-up or delivery
-  double deliveryFee = 50.0; // Example delivery fee
+  double deliveryFee = 150.0; // Example delivery fee
+
+  // Payment mode selection variable
+  String selectedPaymentMode = 'UPI';
 
   double get totalPrice {
     // Calculate total price based on selection
@@ -26,12 +33,17 @@ class _BookingGatewayState extends State<BookingGateway> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[300],
       appBar: AppBar(
+        backgroundColor: Colors.grey[300],
         title: Text(
-          'Booking Gateway',
-          style: TextStyle(color: Colors.black),
+          'Booking Confirmation',
+          style: GoogleFonts.mulish(
+            color: Colors.black,
+            fontWeight: FontWeight.bold
+            ),
         ),
-        backgroundColor: Colors.white,
+        //backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.black),
         centerTitle: true,
       ),
@@ -41,7 +53,7 @@ class _BookingGatewayState extends State<BookingGateway> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Car: ${widget.carName}',
+              "Car Model: ${widget.car.brand} ${widget.car.model}",
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -49,7 +61,7 @@ class _BookingGatewayState extends State<BookingGateway> {
             ),
             const SizedBox(height: 20),
             Text(
-              'Base Price: ₹${widget.basePrice.toStringAsFixed(2)}',
+              'Base Price: ₹${widget.basePrice.toStringAsFixed(1)}',
               style: TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 20),
@@ -74,6 +86,7 @@ class _BookingGatewayState extends State<BookingGateway> {
                   isDelivery = value ?? false;
                 });
               },
+              activeColor: CupertinoColors.activeBlue,
             ),
             RadioListTile(
               title: Text('Delivery (Additional ₹${deliveryFee.toStringAsFixed(2)})'),
@@ -84,6 +97,38 @@ class _BookingGatewayState extends State<BookingGateway> {
                   isDelivery = value ?? false;
                 });
               },
+              activeColor: CupertinoColors.activeBlue,
+            ),
+            const SizedBox(height: 20),
+            Divider(),
+            Text(
+              'Select Payment Mode:',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            RadioListTile(
+              title: Text('UPI'),
+              value: 'UPI',
+              groupValue: selectedPaymentMode,
+              onChanged: (String? value) {
+                setState(() {
+                  selectedPaymentMode = value ?? 'UPI';
+                });
+              },
+              activeColor: CupertinoColors.activeBlue,
+            ),
+            RadioListTile(
+              title: Text('Card'),
+              value: 'Card',
+              groupValue: selectedPaymentMode,
+              onChanged: (String? value) {
+                setState(() {
+                  selectedPaymentMode = value ?? 'UPI';
+                });
+              },
+              activeColor: CupertinoColors.activeBlue,
             ),
             const SizedBox(height: 20),
             Divider(),
@@ -103,7 +148,8 @@ class _BookingGatewayState extends State<BookingGateway> {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: Text('Booking Confirmed'),
-                      content: Text('Your booking for ${widget.carName} has been confirmed.\nTotal: ₹${totalPrice.toStringAsFixed(2)}'),
+                      content: Text(
+                          'Your booking for ${widget.car.brand} ${widget.car.model} has been confirmed.\nTotal: ₹${totalPrice.toStringAsFixed(2)}\nPayment Mode: $selectedPaymentMode'),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
@@ -114,10 +160,15 @@ class _BookingGatewayState extends State<BookingGateway> {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: kPrimaryColor,
                   padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 ),
-                child: Text('Confirm Booking'),
+                child: Text('Confirm Booking',
+                  style: GoogleFonts.mulish(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ],
@@ -126,4 +177,3 @@ class _BookingGatewayState extends State<BookingGateway> {
     );
   }
 }
- 

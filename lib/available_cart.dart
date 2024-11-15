@@ -50,21 +50,19 @@ class _AvailableCarsState extends State<AvailableCars> {
                       ),
                       border: Border.all(
                         color: Colors.black,
-                        width: 1,
+                        width: 0.5,
                       )
                   ),
                   child: Icon(
                     Icons.keyboard_arrow_left,
-                    color: const Color.fromARGB(255, 100, 26, 228),
+                    color: Colors.black,
                     size: 28,
                   ),
                 ),
               ),
-
               SizedBox(
                 height: 16,
               ),
-
               Text(
                 "All Cars (${getCarList().length})",
                 style: TextStyle(

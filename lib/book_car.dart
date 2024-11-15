@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:rentwheels/bookinggate.dart';
 import 'package:rentwheels/data.dart';
 import 'package:rentwheels/constants.dart';
+import 'package:share_plus/share_plus.dart';
 
 class BookCar extends StatefulWidget {
 
@@ -110,8 +112,11 @@ class _BookCarState extends State<BookCar> {
                                 SizedBox(
                                   width: 16,
                                 ),
-
-                                Container(
+                                InkWell(
+                                  onTap: () {
+                                    Share.share('Hey! Check this car out: https://example.com/car-details');
+                                  },
+                                  child: Container(
                                     width: 45,
                                     height: 45,
                                     decoration: BoxDecoration(
@@ -127,9 +132,9 @@ class _BookCarState extends State<BookCar> {
                                       Icons.share,
                                       color: Colors.black,
                                       size: 22,
-                                    )
+                                    ),
+                                  ),
                                 ),
-
                               ],
                             ),
 
@@ -323,20 +328,17 @@ class _BookCarState extends State<BookCar> {
 
                 Row(
                   children: [
-
                     Text(
-                      "Rupees X,XXX",
-                      style: TextStyle(
+                      "₹${widget.car.price}",
+                      style: GoogleFonts.mulish(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
                         fontSize: 22,
                       ),
                     ),
-
                     SizedBox(
                       width: 8,
                     ),
-
                     /*Text(
                       "per month",
                       style: TextStyle(
@@ -357,9 +359,9 @@ class _BookCarState extends State<BookCar> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => BookingGateway(
-                      carName: 'Car Name', 
-                      basePrice: 150,
-                    )
+                      car: widget.car,
+                      basePrice: widget.car.price,
+                    ),     
                   ),
                 );
               },
@@ -392,7 +394,7 @@ class _BookCarState extends State<BookCar> {
     );
   }
 
-  Widget buildPricePerPeriod(String months, String price, bool selected){
+  /*Widget buildPricePerPeriod(String months, String price, bool selected){
     return Expanded(
       child: Container(
         height: 110,
@@ -445,7 +447,7 @@ class _BookCarState extends State<BookCar> {
         ),
       ),
     );
-  }
+  }*/
 
   Widget buildSpecificationCar(String title, String data){
     return Container(
