@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:rentwheels/data.dart';
 
-Widget buildDealer(Dealer dealer, int index) {
+Widget buildCarType(carType carType, int index) {
   return Container(
     decoration: BoxDecoration(
       color: Colors.white,
@@ -15,19 +16,16 @@ Widget buildDealer(Dealer dealer, int index) {
     child: Column(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-
         Container(
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: AssetImage(dealer.image),
+              image: AssetImage(carType.image),
               fit: BoxFit.cover,
             ),
-            borderRadius: BorderRadius.all(
-              Radius.circular(15),
-            ),
+            
           ),
           height: 60,
-          width: 60,
+          width: 150,
         ),
 
         SizedBox(
@@ -35,9 +33,9 @@ Widget buildDealer(Dealer dealer, int index) {
         ),
 
         Text(
-          dealer.name,
-          style: TextStyle(
-            fontSize: 20,
+          carType.car_type,
+          style: GoogleFonts.mulish(
+            fontSize: 15,
             fontWeight: FontWeight.bold,
             height: 1,
           ),

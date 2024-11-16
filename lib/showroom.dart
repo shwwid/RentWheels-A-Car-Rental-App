@@ -23,6 +23,7 @@ class _ShowroomState extends State<Showroom> {
 
   List<Car> cars = getCarList();
   List<Dealer> dealers = getDealerList();
+  List<carType> carTypes = getCarTypeList();
 
   /*@override
   void initState() {
@@ -294,7 +295,7 @@ class _ShowroomState extends State<Showroom> {
                           children: [
 
                             Text(
-                              "BRANDS",
+                              "CHOOSE BY CAR TYPE",
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -302,29 +303,6 @@ class _ShowroomState extends State<Showroom> {
 
                               ),
                             ),
-
-                            Row(
-                              children: [
-                                Text(
-                                  "view all",
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: kPrimaryColor,
-                                  ),
-                                ),
-
-                                SizedBox(
-                                  width: 8,
-                                ),
-                                Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 12,
-                                  color: kPrimaryColor,
-                                ),
-                              ],
-                            ),
-
                           ],
                         ),
                       ),
@@ -335,7 +313,7 @@ class _ShowroomState extends State<Showroom> {
                         child: ListView(
                           physics: BouncingScrollPhysics(),
                           scrollDirection: Axis.horizontal,
-                          children: buildDealers(),
+                          children: buildCarTypeList(),
                         ),
                       ),
 
@@ -347,20 +325,6 @@ class _ShowroomState extends State<Showroom> {
 
         ],
       ),
-      /*bottomNavigationBar: Container(
-        height: 70,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: buildNavigationItems(),
-        ),
-      ),*/
     );
   }
 
@@ -381,13 +345,14 @@ class _ShowroomState extends State<Showroom> {
     return list;
   }
 
-  List<Widget> buildDealers() {
-    List<Widget> list = [];
-    for(var i = 0; i <dealers.length; i++) {
-      list.add(buildDealer(dealers[i], i));
-    }
-    return list;
+  List<Widget> buildCarTypeList() {
+  List<Widget> list = [];
+  for (var i = 0; i < carTypes.length; i++) {
+    list.add(buildCarType(carTypes[i], i)); // Pass each `carType` object and its index
   }
+  return list;
+}
+
 
   /*List<Widget> buildNavigationItems() {
     List<Widget> list = [];

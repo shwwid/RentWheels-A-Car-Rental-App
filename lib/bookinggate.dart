@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rentwheels/constants.dart';
 import 'package:rentwheels/data.dart';
+//import 'package:rentwheels/services/upi.txt';
 
 class BookingGateway extends StatefulWidget {
   final Car car;
@@ -40,10 +41,9 @@ class _BookingGatewayState extends State<BookingGateway> {
           'Booking Confirmation',
           style: GoogleFonts.mulish(
             color: Colors.black,
-            fontWeight: FontWeight.bold
-            ),
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        //backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.black),
         centerTitle: true,
       ),
@@ -140,37 +140,51 @@ class _BookingGatewayState extends State<BookingGateway> {
               ),
             ),
             const Spacer(),
-            Center(
+            /*Center(
               child: ElevatedButton(
                 onPressed: () {
-                  // Add booking confirmation logic here
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text('Booking Confirmed'),
-                      content: Text(
-                          'Your booking for ${widget.car.brand} ${widget.car.model} has been confirmed.\nTotal: ₹${totalPrice.toStringAsFixed(2)}\nPayment Mode: $selectedPaymentMode'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text('OK'),
+                  if (selectedPaymentMode == 'UPI') {
+                    // Navigate to the UPI page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UPI(
+                          car: widget.car,
+                          totalAmount: totalPrice,
                         ),
-                      ],
-                    ),
-                  );
+                      ),
+                    );
+                  } else {
+                    // Show confirmation for other payment methods
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text('Booking Confirmed'),
+                        content: Text(
+                            'Your booking for ${widget.car.brand} ${widget.car.model} has been confirmed.\nTotal: ₹${totalPrice.toStringAsFixed(2)}\nPayment Mode: $selectedPaymentMode'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text('OK'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
                   padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 ),
-                child: Text('Confirm Booking',
+                child: Text(
+                  'Confirm Booking',
                   style: GoogleFonts.mulish(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
               ),
-            ),
+            ),*/
           ],
         ),
       ),

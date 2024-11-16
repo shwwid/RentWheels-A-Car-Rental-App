@@ -2,8 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:rentwheels/admin.dart';
 import 'package:rentwheels/components/text_box.dart';
-import 'package:rentwheels/login.dart';
+import 'package:rentwheels/login.dart'; // Import your admin page
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -161,6 +162,43 @@ class _ProfileState extends State<Profile> {
     }
   }
 
+  Future<void> becomeAdmin() async {
+  final userData = await FirebaseFirestore.instance
+      .collection("Users")
+      .doc(currentuser.email)
+      .get();
+
+  String? phoneNumber = userData.data()?['phone_number'];
+
+  if (phoneNumber == null || phoneNumber.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('You must have a phone number to become an admin.')),
+    );
+    return; // Exit the method if the phone number is missing
+  }
+
+  try {
+    await FirebaseFirestore.instance
+        .collection("Users")
+        .doc(currentuser.email)
+        .update({'role': 'admin'});
+
+    // After updating the role, navigate to the admin page
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => AdminPage()),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('You are now an admin!')),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Failed to promote to admin. Please try again.')),
+    );
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -241,6 +279,27 @@ class _ProfileState extends State<Profile> {
                       text: userData['phone_number'] ?? 'No Phone Number',
                       sectionName: 'Phone Number',
                       onPressed: () => editPhoneNumber(),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(255, 32, 81, 203),
+                          padding: const EdgeInsets.symmetric(vertical: 12.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                        onPressed: () => becomeAdmin(),
+                        child: Text(
+                          'Become Admin',
+                          style: GoogleFonts.mulish(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),

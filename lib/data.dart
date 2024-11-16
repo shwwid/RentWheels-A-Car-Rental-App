@@ -22,9 +22,13 @@ class Car {
   int price;
   double rate;
   //String rent;
+  String fuelType;
+  int seats;
+  String transmission;
+
   List<String> images;
 
-  Car(this.brand, this.model, this.price, /*this.rent,*/ this.rate, this.images);
+  Car(this.brand, this.model, this.price, /*this.rent,*/ this.rate, this.fuelType, this.seats, this.transmission, this.images);
 
 }
 
@@ -36,6 +40,9 @@ List<Car> getCarList(){
       4500,
       //"Monthly",
       4.5,
+      "Diesel",
+      7,
+      "Manual",
       [
         "assets/images/fortuner_0.png",
         "assets/images/fortuner_1.png",
@@ -49,6 +56,9 @@ List<Car> getCarList(){
       3200,
       //"Weekly",
       4.0,
+      "Diesel",
+      5,
+      "Manual",
       [
         "assets/images/creta.png",
       ],
@@ -59,6 +69,9 @@ List<Car> getCarList(){
       1800,
       //"Daily",
       4.1,
+      "Petrol",
+      4,
+      "Automatic",
       [
         "assets/images/swift.png",
       ],
@@ -69,6 +82,9 @@ List<Car> getCarList(){
       2000,
       //"Daily",
       3.9,
+      "Petrol",
+      5,
+      "Automatic",
       [
         "assets/images/verna.png",
       ],
@@ -103,6 +119,29 @@ List<Dealer> getDealerList(){
     Dealer(
       "Tata",
       "assets/images/tata_0.png",
+    ),
+  ];
+}
+
+class carType {
+  String car_type;
+
+  String image;
+
+  carType(this.car_type, this.image);
+}
+
+List<carType> getCarTypeList(){
+  return <carType>[
+    carType(
+      "SUV",
+      "assets/images/suv.png",
+    ),
+    carType("SEDAN",
+      "assets/images/sedan.png",
+    ),
+    carType("HATCHBACK",
+      "assets/images/hatchback.png",
     ),
   ];
 }

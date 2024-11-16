@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rentwheels/components/square_tile.dart';
 import 'package:rentwheels/components/my_textfield.dart';
 import 'package:rentwheels/components/button.dart';
-import 'package:rentwheels/host_login.dart';
+//import 'package:rentwheels/host_login.dart';
 import 'package:rentwheels/registration.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rentwheels/services/auth_google.dart';
@@ -259,7 +259,7 @@ void wrongPasswordMessage() {
                     ),
                   ],
                 ),
-                const SizedBox(height: 35),
+                /*const SizedBox(height: 35),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -284,7 +284,7 @@ void wrongPasswordMessage() {
                       ),
                     ),
                   ],
-                ),
+                ),*/
 
               ],
             ),
