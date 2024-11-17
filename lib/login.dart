@@ -40,10 +40,13 @@ class _LoginPageState extends State<LoginPage> {
     email: emailController.text,
     password: passwordController.text,
   );
-  Navigator.pop(context); // Navigate back after successful login
+  if(mounted) {
+  Navigator.pop(context);
+  } // Navigate back after successful login
 } on FirebaseAuthException catch (e) {
+  if(mounted) {
   Navigator.pop(context); // Close any loading indicator or screen transition
-
+  }
   String errorMessage;
 
   // Handle different error codes from Firebase
@@ -56,12 +59,14 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // Show the error message in a Snackbar
+  if(mounted) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(errorMessage),
       backgroundColor: Colors.black, // You can customize the background color
     ),
   );
+  }
 }
 
 

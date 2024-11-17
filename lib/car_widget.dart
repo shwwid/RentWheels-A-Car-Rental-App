@@ -16,44 +16,6 @@ Widget buildCar(Car car, int index) {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-
-        Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.green[500],
-              borderRadius: BorderRadius.all(
-                Radius.circular(15),
-              ),
-            ),
-
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.star,
-                    color: Colors.white,
-                    size: 15,
-                  ),
-                  Text(
-                    car.rate.toStringAsFixed(1),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-
-                    ),
-
-                  ),
-                ],
-              ),
-            ),
-
-          ),
-        ),
-
         SizedBox(
           height: 8,
         ),

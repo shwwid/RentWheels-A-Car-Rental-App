@@ -153,44 +153,6 @@ class _BookCarState extends State<BookCar> {
                             ),
                           ),
                         ),
-                        /*Row(
-                          children: [
-                            Container(
-                              width: 45,
-                              height: 45,
-                              decoration: BoxDecoration(
-                                color: kPrimaryColor,
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(15),
-                                ),
-                              ),
-                              /*child: Icon(
-                                Icons.bookmark_border,
-                                color: Colors.white,
-                                size: 22,
-                              ),
-                            ),
-                            SizedBox(width: 16),
-                            Container(
-                              width: 45,
-                              height: 45,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.all(
-                                  Radius.circular(15),
-                                ),
-                                border: Border.all(
-                                  color: Colors.grey,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.share,
-                                color: Colors.black,
-                                size: 22,
-                              ),*/
-                            ),
-                          ],
-                        ),*/
                       ],
                     ),
                     SizedBox(height: 16),
@@ -297,7 +259,7 @@ class _BookCarState extends State<BookCar> {
                     ),
                     SizedBox(height: 8,),
                     Text(
-                      "Customer Rating: ${widget.car.rate}",
+                      "Car Type: ${widget.car.carType}",
                       style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
                     SizedBox(height: 8,)

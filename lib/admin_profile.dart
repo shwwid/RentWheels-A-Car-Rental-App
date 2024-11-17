@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rentwheels/components/text_box.dart';
-import 'package:rentwheels/showroom.dart';
+//import 'package:rentwheels/showroom.dart';
 
 class AdminProfile extends StatefulWidget {
   const AdminProfile({super.key});
@@ -126,33 +126,6 @@ class _AdminProfileState extends State<AdminProfile> {
     );
   }
 
-  Future<void> removeAdminRole() async {
-  try {
-    // Remove admin role from Firestore
-    await FirebaseFirestore.instance
-        .collection("Users")
-        .doc(currentuser.email)
-        .update({'role': FieldValue.delete()});
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Admin role removed successfully!')),
-    );
-    
-    // Optionally, log out the user after removing the admin role
-    FirebaseAuth.instance.signOut();
-
-    // Navigate to Showroom page
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => Showroom()),  // Replace with your Showroom page widget
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Failed to remove admin role. Please try again.')),
-    );
-  }
-}
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -274,28 +247,6 @@ class _AdminProfileState extends State<AdminProfile> {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 207, 66, 56),
-                      padding: const EdgeInsets.symmetric(vertical: 12.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                    ),
-                    onPressed: () => removeAdminRole(),
-                    child: Text(
-                      'Remove Admin Role',
-                      style: GoogleFonts.mulish(
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-
                 const SizedBox(height: 30),
               ],
             );

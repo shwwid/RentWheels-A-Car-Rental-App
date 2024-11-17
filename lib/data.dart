@@ -20,15 +20,16 @@ class Car {
   String brand;
   String model;
   int price;
-  double rate;
+  //double rate;
   //String rent;
   String fuelType;
   int seats;
+  String carType;
   String transmission;
 
   List<String> images;
 
-  Car(this.brand, this.model, this.price, /*this.rent,*/ this.rate, this.fuelType, this.seats, this.transmission, this.images);
+  Car(this.brand, this.model, this.price, /*this.rent,this.rate*/ this.fuelType, this.seats, this.carType, this.transmission, this.images);
 
 }
 
@@ -39,9 +40,9 @@ List<Car> getCarList(){
       "Fortuner",
       4500,
       //"Monthly",
-      4.5,
       "Diesel",
       7,
+      'Suv',
       "Manual",
       [
         "assets/images/fortuner_0.png",
@@ -55,9 +56,9 @@ List<Car> getCarList(){
       "Creta",
       3200,
       //"Weekly",
-      4.0,
       "Diesel",
       5,
+      'Suv',
       "Manual",
       [
         "assets/images/creta.png",
@@ -68,9 +69,9 @@ List<Car> getCarList(){
       "Swift",
       1800,
       //"Daily",
-      4.1,
       "Petrol",
       4,
+      'Hatchback',
       "Automatic",
       [
         "assets/images/swift.png",
@@ -81,9 +82,9 @@ List<Car> getCarList(){
       "Verna",
       2000,
       //"Daily",
-      3.9,
       "Petrol",
       5,
+      'Sedan',
       "Automatic",
       [
         "assets/images/verna.png",

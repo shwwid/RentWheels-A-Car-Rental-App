@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:rentwheels/constants.dart';
+//import 'package:rentwheels/constants.dart';
 import 'package:rentwheels/data.dart';
 //import 'package:rentwheels/services/upi.txt';
 

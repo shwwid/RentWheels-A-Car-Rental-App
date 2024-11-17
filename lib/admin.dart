@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rentwheels/add_vehicle.dart';
+//import 'package:rentwheels/data.dart';
 import 'package:rentwheels/go_back_to_user.dart';
-import 'package:rentwheels/update_vehicle.dart'; // Ensure this imports your update vehicle page
-import 'admin_profile.dart';  // Ensure this imports your profile page
+//import 'package:rentwheels/update_vehicle.dart'; // Ensure this imports your update vehicle page
+import 'admin_profile.dart'; // Ensure this imports your profile page
+//import 'package:firebase_storage/firebase_storage.dart';
 
 // Define the primary color globally
 const Color kPrimaryColor = Color(0xFF1A73E8); // Replace with your desired primary color
@@ -19,8 +22,10 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  bool _isButtonsVisible = false; // State to control the visibility of the buttons
-  String _registrationNumber = ''; // Placeholder for registration number
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // Placeholder for registration number
+
+  User? get currentUser => _auth.currentUser; // Retrieve the current authenticated user
 
   @override
   Widget build(BuildContext context) {
@@ -72,8 +77,15 @@ class _AdminPageState extends State<AdminPage> {
                     children: [
                       // Section for displaying cars
                       buildSectionHeader("Your Cars"),
-                      StreamBuilder<QuerySnapshot>(  // Stream to display cars
-                        stream: _firestore.collection('Cars').snapshots(),
+                      StreamBuilder<QuerySnapshot>(
+                        // Fetch cars from the current user's email path
+                        stream: currentUser != null
+                            ? _firestore
+                                .collection('Users')
+                                .doc(currentUser!.email)
+                                .collection('Cars')
+                                .snapshots()
+                            : null, // Handle null case appropriately if needed
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
                             return const CircularProgressIndicator();
@@ -99,13 +111,42 @@ class _AdminPageState extends State<AdminPage> {
                                       color: Colors.black,
                                     ),
                                   ),
-                                  subtitle: Text("Price: \₹${carData['price'] ?? 'N/A'}"),
+                                  subtitle: Text("Price: ₹${carData['price'] ?? 'N/A'}"),
                                   trailing: IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
-                                    onPressed: () async {
-                                      await _firestore.collection('Cars').doc(doc.id).delete();
-                                    },
-                                  ),
+                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      onPressed: () async {
+                                        String carsId = doc.id; // Document ID of the car to delete
+
+                                        try {
+                                          // Delete from the user's specific collection
+                                          await _firestore
+                                              .collection('Users')
+                                              .doc(currentUser!.email)
+                                              .collection('Cars')
+                                              .doc(carsId)
+                                              .delete();
+
+                                          // Delete from the global Cars collection
+                                          await _firestore.collection('Cars').doc(carsId).delete();
+
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Vehicle deleted successfully')),
+                                          );
+                                        } catch (e) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Failed to delete vehicle')),
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  /*onLongPress: () {
+                                    Navigator.push(
+                                      context, 
+                                      MaterialPageRoute(
+                                        builder: (context) => UpdateVehicle(carDocId: Car[docId] ?? ''),
+                                      ),
+                                    );
+                                  },*/
                                 ),
                               );
                             }).toList(),
@@ -116,7 +157,7 @@ class _AdminPageState extends State<AdminPage> {
 
                       // Section for displaying orders
                       buildSectionHeader("Orders"),
-                      StreamBuilder<QuerySnapshot>(  // Stream to display orders
+                      StreamBuilder<QuerySnapshot>(
                         stream: _firestore.collection('Orders').snapshots(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -148,7 +189,7 @@ class _AdminPageState extends State<AdminPage> {
 
                       // Section for displaying total revenue
                       buildSectionHeader("Revenue Overview"),
-                      StreamBuilder<QuerySnapshot>(  // Stream to calculate total revenue
+                      StreamBuilder<QuerySnapshot>(
                         stream: _firestore.collection('Orders').snapshots(),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -195,22 +236,18 @@ class _AdminPageState extends State<AdminPage> {
             bottom: 16,
             right: 16, // Placed at the bottom-right corner
             child: FloatingActionButton(
-              onPressed: _toggleButtonsVisibility, // Toggle the visibility of the other buttons
-              child: const Icon(Icons.add, size: 30),
+              onPressed: () {
+                // Navigate to Add Vehicle page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AddVehiclePage()),
+                );
+              },
               backgroundColor: kPrimaryColor,
-              foregroundColor: Colors.white, // Using the primary color
+              foregroundColor: Colors.white,
+              child: const Icon(Icons.add, size: 30), // Using the primary color
             ),
           ),
-
-          // Animated button section (Add, Update)
-          if (_isButtonsVisible) ...[
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              bottom: 80,
-              right: 16, // Place them just above the FAB
-              child: _buildPopupButtons(),
-            ),
-          ],
         ],
       ),
     );
@@ -236,48 +273,5 @@ class _AdminPageState extends State<AdminPage> {
         ),
       ),
     );
-  }
-
-  // Stack of buttons for Add and Update
-  Widget _buildPopupButtons() {
-    return Column(
-      children: [
-        _buildPopupButton("Add Vehicle", AddVehiclePage()),
-        const SizedBox(height: 10),
-        _buildPopupButton("Update Vehicle", UpdateVehicle(registrationNumber: _registrationNumber)),
-      ],
-    );
-  }
-
-  // Button popup
-  Widget _buildPopupButton(String text, Widget? page) {
-    return ElevatedButton(
-      onPressed: () {
-        if (page != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => page),
-          );
-        }
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: kPrimaryColor, // Set the background color of the button
-      ),
-      child: Text(
-        text,
-        style: GoogleFonts.mulish(
-          fontSize: 16, // Set the font size for the button text
-          fontWeight: FontWeight.bold,
-          color: Colors.white, // White text color for the button
-        ),
-      ),
-    );
-  }
-
-  // Toggle the visibility of the buttons
-  void _toggleButtonsVisibility() {
-    setState(() {
-      _isButtonsVisible = !_isButtonsVisible;
-    });
   }
 }
