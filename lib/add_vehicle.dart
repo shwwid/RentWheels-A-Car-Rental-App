@@ -25,127 +25,129 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
   final TextEditingController _mileageController = TextEditingController();
   final TextEditingController _fuelTypeController = TextEditingController();
   final TextEditingController _registrationNumberController = TextEditingController();
+  final TextEditingController _yearController = TextEditingController();
   final TextEditingController _carTypeController = TextEditingController();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  File? _selectedImage;
+  final List<File> _selectedImages = [];
 
   User? get currentUser => _auth.currentUser;
 
-  Future<void> pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+  Future<void> pickImages() async {
+    final pickedFiles = await ImagePicker().pickMultiImage();
+    if (pickedFiles != null) {
       setState(() {
-        _selectedImage = File(pickedFile.path);
+        _selectedImages.addAll(pickedFiles.map((e) => File(e.path)).toList());
       });
     }
   }
 
-  Future<String?> uploadImage(File image) async {
+  Future<List<String>> uploadImages(List<File> images) async {
+    List<String> imageUrls = [];
     try {
-      String filePath = 'vehicle_images/${DateTime.now().millisecondsSinceEpoch}.png';
-      UploadTask uploadTask = _storage.ref().child(filePath).putFile(image);
-      TaskSnapshot snapshot = await uploadTask;
-      String downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
+      for (var image in images) {
+        String filePath = 'vehicle_images/${DateTime.now().millisecondsSinceEpoch}_${image.hashCode}.png';
+        UploadTask uploadTask = _storage.ref().child(filePath).putFile(image);
+        TaskSnapshot snapshot = await uploadTask;
+        String downloadUrl = await snapshot.ref.getDownloadURL();
+        imageUrls.add(downloadUrl);
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload image: $e')),
+        SnackBar(content: Text('Failed to upload one or more images: $e')),
       );
-      return null;
     }
+    return imageUrls;
   }
 
   Future<void> addVehicle() async {
-  String brand = _brandController.text;
-  String model = _modelController.text;
-  String price = _priceController.text;
-  String transmission = _transmissionController.text;
-  String seats = _seatsController.text;
-  String mileage = _mileageController.text;
-  String fuelType = _fuelTypeController.text;
-  String registrationNumber = _registrationNumberController.text;
-  String carType = _carTypeController.text;
+    String brand = _brandController.text;
+    String model = _modelController.text;
+    String price = _priceController.text;
+    String transmission = _transmissionController.text;
+    String seats = _seatsController.text;
+    String mileage = _mileageController.text;
+    String fuelType = _fuelTypeController.text;
+    String registrationNumber = _registrationNumberController.text;
+    String year = _yearController.text;
+    String carType = _carTypeController.text;
 
-  if (currentUser == null || currentUser?.email == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('User not authenticated or missing email')),
-    );
-    return;
-  }
-
-  if (brand.isEmpty || model.isEmpty || price.isEmpty || transmission.isEmpty || seats.isEmpty || mileage.isEmpty || fuelType.isEmpty || registrationNumber.isEmpty || carType.isEmpty || _selectedImage == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please fill all fields and select an image')),
-    );
-    return;
-  }
-
-  try {
-    String userEmail = currentUser!.email!;
-    String? imageUrl = await uploadImage(_selectedImage!);
-
-    if (imageUrl != null) {
-      // Adding vehicle to the user's specific collection first
-      DocumentReference userCarRef = await _firestore.collection('Users').doc(userEmail).collection('Cars').add({
-        'brand': brand,
-        'model': model,
-        'price': price,
-        'transmission': transmission,
-        'seats': seats,
-        'mileage': mileage,
-        'fuelType': fuelType,
-        'registrationNumber': registrationNumber,
-        'carType': carType,
-        'imageURL': imageUrl, // Save the image URL
-      });
-
-      // After the vehicle is added to the user's collection, retrieve its document ID
-      String userCarId = userCarRef.id;
-
-      // Now add the vehicle to the global 'Cars' collection and set 'userCarId' to the user's car document ID
-      await _firestore.collection('Cars').add({
-        'brand': brand,
-        'model': model,
-        'price': price,
-        'transmission': transmission,
-        'seats': seats,
-        'mileage': mileage,
-        'fuelType': fuelType,
-        'registrationNumber': registrationNumber,
-        'carType': carType,
-        'owner': userEmail,
-        'imageURL': imageUrl, // Save the image URL
-        'userCarId': userCarId, // Set the document ID of the user's specific car entry
-      });
-
+    if (currentUser == null || currentUser?.email == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vehicle added successfully')),
+        const SnackBar(content: Text('User not authenticated or missing email')),
       );
-
-      // Clear all input fields after adding the vehicle
-      _brandController.clear();
-      _modelController.clear();
-      _priceController.clear();
-      _transmissionController.clear();
-      _seatsController.clear();
-      _mileageController.clear();
-      _fuelTypeController.clear();
-      _registrationNumberController.clear();
-      _carTypeController.clear();
-      setState(() {
-        _selectedImage = null;
-      });
+      return;
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Failed to add vehicle')),
-    );
+
+    if (brand.isEmpty || model.isEmpty || price.isEmpty || transmission.isEmpty || seats.isEmpty || mileage.isEmpty || fuelType.isEmpty || registrationNumber.isEmpty || carType.isEmpty || _selectedImages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all fields and select at least one image')),
+      );
+      return;
+    }
+
+    try {
+      String userEmail = currentUser!.email!;
+      List<String> imageUrls = await uploadImages(_selectedImages);
+
+      if (imageUrls.isNotEmpty) {
+        DocumentReference userCarRef = await _firestore.collection('Users').doc(userEmail).collection('Cars').add({
+          'brand': brand,
+          'model': model,
+          'price': price,
+          'transmission': transmission,
+          'seats': seats,
+          'mileage': mileage,
+          'fuelType': fuelType,
+          'registrationNumber': registrationNumber,
+          'year': year,
+          'carType': carType,
+          'imageURLs': imageUrls, // Save list of image URLs
+        });
+
+        await _firestore.collection('Cars').add({
+          'brand': brand,
+          'model': model,
+          'price': price,
+          'transmission': transmission,
+          'seats': seats,
+          'mileage': mileage,
+          'fuelType': fuelType,
+          'registrationNumber': registrationNumber,
+          'year': year,
+          'carType': carType,
+          'owner': userEmail,
+          'imageURLs': imageUrls, // Save list of image URLs
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vehicle added successfully')),
+        );
+
+        // Clear input fields and reset image list
+        _brandController.clear();
+        _modelController.clear();
+        _priceController.clear();
+        _transmissionController.clear();
+        _seatsController.clear();
+        _mileageController.clear();
+        _fuelTypeController.clear();
+        _registrationNumberController.clear();
+        _yearController.clear();
+        _carTypeController.clear();
+        setState(() {
+          _selectedImages.clear();
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to add vehicle')),
+      );
+    }
   }
-}
 
 
 
@@ -188,17 +190,34 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
             const SizedBox(height: 16),
             _buildTextField(_registrationNumberController, 'Registration Number'),
             const SizedBox(height: 16),
+            _buildTextField(_yearController, 'Year'),
+            const SizedBox(height: 16),
             _buildTextField(_carTypeController, 'Car Type'),
             const SizedBox(height: 16),
-            _selectedImage == null
-                ? const Text('No image selected', style: TextStyle(color: Colors.red))
-                : Image.file(_selectedImage!, height: 150),
+            _selectedImages.isEmpty
+                ? const Text('No images selected', style: TextStyle(color: Colors.red))
+                : Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _selectedImages.map((image) {
+                      return Image.file(image, height: 100, width: 100, fit: BoxFit.cover);
+                    }).toList(),
+                  ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: pickImage,
-              child: Text('Pick Image', style: GoogleFonts.mulish()),
+              onPressed: pickImages,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: kPrimaryColor,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text('Pick Images', style: GoogleFonts.mulish(fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,)),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: addVehicle,
               style: ElevatedButton.styleFrom(

@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rentwheels/add_vehicle.dart';
 //import 'package:rentwheels/data.dart';
-import 'package:rentwheels/go_back_to_user.dart';
+//import 'package:rentwheels/go_back_to_user.dart';
 //import 'package:rentwheels/update_vehicle.dart'; // Ensure this imports your update vehicle page
 import 'admin_profile.dart'; // Ensure this imports your profile page
 //import 'package:firebase_storage/firebase_storage.dart';
@@ -19,6 +19,10 @@ class AdminPage extends StatefulWidget {
   @override
   State<AdminPage> createState() => _AdminPageState();
 }
+
+void signUserOut() {
+    FirebaseAuth.instance.signOut();
+  }
 
 class _AdminPageState extends State<AdminPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -45,14 +49,8 @@ class _AdminPageState extends State<AdminPage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.home, color: Colors.white), // Home icon
-            onPressed: () {
-              // Navigate to the GoBackToUser widget
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const GoBackToUser()),
-              );
-            },
+            icon: const Icon(Icons.logout, color: Colors.white), // Home icon
+            onPressed: signUserOut,
           ),
           IconButton(
             icon: const Icon(Icons.person, color: Colors.white),
@@ -115,7 +113,7 @@ class _AdminPageState extends State<AdminPage> {
                                   trailing: IconButton(
                                       icon: const Icon(Icons.delete, color: Colors.red),
                                       onPressed: () async {
-                                        String carsId = doc.id; // Document ID of the car to delete
+                                        
 
                                         try {
                                           // Delete from the user's specific collection
@@ -123,11 +121,14 @@ class _AdminPageState extends State<AdminPage> {
                                               .collection('Users')
                                               .doc(currentUser!.email)
                                               .collection('Cars')
-                                              .doc(carsId)
+                                              .doc(doc.id)
                                               .delete();
 
                                           // Delete from the global Cars collection
-                                          await _firestore.collection('Cars').doc(carsId).delete();
+                                          await _firestore
+                                              .collection('Cars')
+                                              .doc(doc.id)
+                                              .delete();
 
                                           ScaffoldMessenger.of(context).showSnackBar(
                                             const SnackBar(content: Text('Vehicle deleted successfully')),

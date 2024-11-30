@@ -3,6 +3,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    
     <application
         android:label="rentwheels"
         android:name="${applicationName}"
@@ -35,6 +36,12 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+
+        <meta-data android:name="com.phonepe.android.sdk.isUAT" android:value="true"/> 
+        <meta-data android:name="com.phonepe.android.sdk.isSimulator" android:value="true"/>
+        <meta-data android:name="com.phonepe.android.sdk.MerchantId" android:value="PGTESTPAYUAT86"/> 
+<!--          <meta-data android:name="com.phonepe.android.sdk.AppId" android:value="appId"/> -->
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

@@ -41,6 +41,7 @@ class _CarInfoPageState extends State<CarInfoPage> {
           }
 
           var carData = snapshot.data!.data() as Map<String, dynamic>;
+          List<dynamic> imageUrls = carData['imageURLs'] ?? [];
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
@@ -48,7 +49,7 @@ class _CarInfoPageState extends State<CarInfoPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Car Model and Brand
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Center(
                   child: Text(
                     carData['model'] ?? 'Unknown Model',
@@ -69,12 +70,33 @@ class _CarInfoPageState extends State<CarInfoPage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16.0),
+                const SizedBox(height: 50),
 
-                // Car Image with a nice border
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(carData['imageURL'] ?? '', height: 250, fit: BoxFit.cover),
+                // Car Image PageView
+                SizedBox(
+                  height: 200,
+                  child: PageView.builder(
+                    physics: BouncingScrollPhysics(),
+                    itemCount: imageUrls.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            imageUrls[index],
+                            fit: BoxFit.scaleDown,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Image.asset(
+                                'assets/default_car.jpg',
+                                fit: BoxFit.scaleDown,
+                              );
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: 16.0),
 
@@ -104,7 +126,14 @@ class _CarInfoPageState extends State<CarInfoPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Specifications", style: GoogleFonts.mulish(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+            Text(
+              "Specifications",
+              style: GoogleFonts.mulish(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
             const SizedBox(height: 8.0),
             _buildSpecRow("Brand", carData['brand'] ?? 'N/A'),
             _buildSpecRow("Model", carData['model'] ?? 'N/A'),
@@ -113,6 +142,8 @@ class _CarInfoPageState extends State<CarInfoPage> {
             _buildSpecRow("Seats", carData['seats']?.toString() ?? 'N/A'),
             _buildSpecRow("Mileage(km/l)", carData['mileage']?.toString() ?? 'N/A'),
             _buildSpecRow("Car Type", carData['carType'] ?? 'N/A'),
+            _buildSpecRow("Registration Number", carData['registrationNumber'] ?? 'N/A'),
+            _buildSpecRow("Model Year", carData['year']?.toString() ?? 'N/A'),
           ],
         ),
       ),

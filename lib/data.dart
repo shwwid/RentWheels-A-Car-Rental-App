@@ -87,7 +87,8 @@ List<Car> getCarList(){
       'Sedan',
       "Automatic",
       [
-        "assets/images/verna.png",
+        "assets/images/verna_01.png",
+        "assets/images/verna_02.png",
       ],
     ),
   ];
@@ -138,10 +139,10 @@ List<carType> getCarTypeList(){
       "SUV",
       "assets/images/suv.png",
     ),
-    carType("SEDAN",
+    carType("Sedan",
       "assets/images/sedan.png",
     ),
-    carType("HATCHBACK",
+    carType("Hatchback",
       "assets/images/hatchback.png",
     ),
   ];

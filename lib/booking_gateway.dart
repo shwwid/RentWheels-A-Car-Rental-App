@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:rentwheels/phonepe.dart'; // Make sure to import your PhonePePayment page
 
 class BookingGatewayPage extends StatefulWidget {
   final String carId;
@@ -13,10 +15,12 @@ class BookingGatewayPage extends StatefulWidget {
 
 class _BookingGatewayPageState extends State<BookingGatewayPage> {
   bool _isDeliverySelected = false;
-  double _deliveryCost = 500.0; // Example cost for delivery
+  final double _deliveryCost = 500.0; // Example cost for delivery
   String _paymentMethod = 'UPI';
-
   late Future<DocumentSnapshot> _carDetailsFuture;
+
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   @override
   void initState() {
@@ -29,7 +33,41 @@ class _BookingGatewayPageState extends State<BookingGatewayPage> {
   }
 
   double _calculateTotalPrice(double basePrice) {
-    return basePrice + (_isDeliverySelected ? _deliveryCost : 0);
+    int numberOfDays = _startDate != null && _endDate != null
+        ? _endDate!.difference(_startDate!).inDays + 1
+        : 0;
+    double totalPrice = basePrice * numberOfDays;
+    if (_isDeliverySelected) {
+      totalPrice += _deliveryCost;
+    }
+    return totalPrice;
+  }
+
+  Future<void> _selectDate({required bool isStartDate}) async {
+    DateTime initialDate = DateTime.now();
+    DateTime firstDate = DateTime.now();
+    DateTime lastDate = DateTime.now().add(const Duration(days: 365));
+
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        if (isStartDate) {
+          _startDate = pickedDate;
+          // Ensure start date is before end date
+          if (_endDate != null && _endDate!.isBefore(_startDate!)) {
+            _endDate = null;
+          }
+        } else {
+          _endDate = pickedDate;
+        }
+      });
+    }
   }
 
   @override
@@ -39,7 +77,7 @@ class _BookingGatewayPageState extends State<BookingGatewayPage> {
         backgroundColor: Colors.grey[300],
         title: Text(
           'RentWheels Booking Gateway',
-          style: GoogleFonts.mulish(color: Colors.black, fontSize: 18),
+          style: GoogleFonts.mulish(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.black),
       ),
@@ -71,6 +109,51 @@ class _BookingGatewayPageState extends State<BookingGatewayPage> {
                   '${carData['brand']} ${carData['model']}',
                   style: GoogleFonts.mulish(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
+                const SizedBox(height: 16.0),
+
+                // Displaying Car Rental Price Per Day
+                Text(
+                  'Rental Price Per Day: ₹${basePrice.toStringAsFixed(2)}',
+                  style: GoogleFonts.mulish(fontSize: 18, color: Colors.black87, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16.0),
+
+                // Date and Time Selection
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Start Date:',
+                      style: GoogleFonts.mulish(fontSize: 18, color: Colors.black87),
+                    ),
+                    TextButton(
+                      onPressed: () => _selectDate(isStartDate: true),
+                      child: Text(
+                        _startDate != null
+                            ? DateFormat('dd/MM/yyyy').format(_startDate!)
+                            : 'Select Start Date',
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'End Date:',
+                      style: GoogleFonts.mulish(fontSize: 18, color: Colors.black87),
+                    ),
+                    TextButton(
+                      onPressed: () => _selectDate(isStartDate: false),
+                      child: Text(
+                        _endDate != null
+                            ? DateFormat('dd/MM/yyyy').format(_endDate!)
+                            : 'Select End Date',
+                      ),
+                    ),
+                  ],
+                ),
+
                 const SizedBox(height: 16.0),
 
                 // Delivery Option
@@ -136,28 +219,60 @@ class _BookingGatewayPageState extends State<BookingGatewayPage> {
                   ),
                 ),
 
-                const Spacer(), // This pushes the button to the bottom of the screen
+                const Spacer(), // Push the button to the bottom
 
-                // Confirm Booking Button (placed at the bottom)
+                // Confirm Booking Button
                 Center(
                   child: ElevatedButton(
                     onPressed: () {
-                      // Implement booking confirmation and payment handling logic here
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text('Booking Confirmed'),
-                            content: Text('Your booking for ${carData['model']} has been confirmed.\nTotal Price: ₹${_calculateTotalPrice(basePrice).toStringAsFixed(2)}\nPayment Method: $_paymentMethod'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('OK'),
+                      if (_startDate == null || _endDate == null) {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: Text('Incomplete Booking Details'),
+                              content: Text('Please select both start and end dates.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text('OK'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        return;
+                      }
+
+                      if (_paymentMethod == 'UPI') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PhonePePayment(),
+                          ),
+                        );
+                      } else {
+                        // Handle other payment methods or show a confirmation dialog
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text('Booking Confirmed'),
+                              content: Text(
+                                'Your booking for ${carData['model']} has been confirmed.\n'
+                                'Total Price: ₹${_calculateTotalPrice(basePrice).toStringAsFixed(2)}\n'
+                                'Payment Method: $_paymentMethod',
                               ),
-                            ],
-                          );
-                        },
-                      );
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,

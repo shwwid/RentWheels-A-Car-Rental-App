@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rentwheels/admin.dart';
 import 'package:rentwheels/components/text_box.dart';
-import 'package:rentwheels/login.dart'; // Import your admin page
+import 'package:rentwheels/login.dart';
+import 'package:flutter/services.dart'; // Import your admin page
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -23,54 +24,58 @@ class _ProfileState extends State<Profile> {
   Future<void> editField(String field) async {
     String newValue = "";
     await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.black,
-        title: const Text(
-          "Change",
-          style: TextStyle(color: Colors.white),
-        ),
-        content: TextField(
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: "Enter New $field",
-            hintStyle: const TextStyle(color: Colors.grey),
-          ),
-          onChanged: (value) {
-            newValue = value;
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white)),
-          ),
-          TextButton(
-            onPressed: () async {
-              if (newValue.isNotEmpty) {
-                try {
-                  await FirebaseFirestore.instance
-                      .collection("Users")
-                      .doc(currentuser.email)
-                      .update({field.toLowerCase(): newValue});
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Field updated successfully!')),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Failed to update. Please try again.')),
-                  );
-                }
-              }
-              Navigator.pop(context);
-            },
-            child: const Text('Save', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+  context: context,
+  builder: (context) => AlertDialog(
+    backgroundColor: Colors.black,
+    title: const Text(
+      "Change Name",
+      style: TextStyle(color: Colors.white),
+    ),
+    content: TextField(
+      autofocus: true,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        hintText: "Enter New $field",
+        hintStyle: const TextStyle(color: Colors.grey),
       ),
-    );
+      inputFormatters: [
+        // Only allows letters (uppercase and lowercase)
+        FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
+      ],
+      onChanged: (value) {
+        newValue = value;
+      },
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+      ),
+      TextButton(
+        onPressed: () async {
+          if (newValue.isNotEmpty) {
+            try {
+              await FirebaseFirestore.instance
+                  .collection("Users")
+                  .doc(currentuser.email)
+                  .update({field.toLowerCase(): newValue});
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Field updated successfully!')),
+              );
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Failed to update. Please try again.')),
+              );
+            }
+          }
+          Navigator.pop(context);
+        },
+        child: const Text('Save', style: TextStyle(color: Colors.white)),
+      ),
+    ],
+  ),
+);
   }
 
   Future<void> editPhoneNumber() async {
@@ -181,7 +186,7 @@ class _ProfileState extends State<Profile> {
     await FirebaseFirestore.instance
         .collection("Users")
         .doc(currentuser.email)
-        .update({'role': 'admin'});
+        .update({'role': 'seller'});
 
     // After updating the role, navigate to the admin page
     Navigator.pushReplacement(
@@ -190,11 +195,11 @@ class _ProfileState extends State<Profile> {
     );
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('You are now an admin!')),
+      const SnackBar(content: Text('You can now rent your cars!')),
     );
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Failed to promote to admin. Please try again.')),
+      const SnackBar(content: Text('Failed. Please try again.')),
     );
   }
 }
@@ -280,7 +285,50 @@ class _ProfileState extends State<Profile> {
                       sectionName: 'Phone Number',
                       onPressed: () => editPhoneNumber(),
                     ),
+                    const SizedBox(height: 10),
                     Padding(
+                      padding: const EdgeInsets.only(left: 25.0),
+                      child: const Text(
+                        'License',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
+                      child: userData['imageURL'] != null
+                          ? Container(
+                              height: 200,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12.0),
+                                border: Border.all(color: Colors.grey),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12.0),
+                                child: Image.network(
+                                  userData['imageURL'],
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(
+                                      child: Text(
+                                        'Error loading image',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            )
+                          : const Center(
+                              child: Text(
+                                'No license image uploaded',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ),
+                    ),
+                    /*Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -292,7 +340,7 @@ class _ProfileState extends State<Profile> {
                         ),
                         onPressed: () => becomeAdmin(),
                         child: Text(
-                          'Become Admin',
+                          'Rent Your Car',
                           style: GoogleFonts.mulish(
                             fontSize: 16.0,
                             fontWeight: FontWeight.bold,
@@ -300,7 +348,7 @@ class _ProfileState extends State<Profile> {
                           ),
                         ),
                       ),
-                    ),
+                    ),*/
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
                       child: ElevatedButton(

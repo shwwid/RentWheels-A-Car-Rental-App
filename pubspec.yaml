@@ -47,6 +47,8 @@ dependencies:
   provider: ^6.1.2
   google_maps_flutter: ^2.10.0
   location: ^7.0.1
+  phonepe_payment_sdk: ^2.0.3
+  crypto: ^3.0.6
 
 
   

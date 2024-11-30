@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rentwheels/components/text_box.dart';
+import 'package:flutter/services.dart';
+
 //import 'package:rentwheels/showroom.dart';
 
 class AdminProfile extends StatefulWidget {
@@ -36,6 +38,10 @@ class _AdminProfileState extends State<AdminProfile> {
             hintText: "Enter New $field",
             hintStyle: const TextStyle(color: Colors.grey),
           ),
+          inputFormatters: [
+            // Only allows letters (uppercase and lowercase)
+            FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
+          ],
           onChanged: (value) {
             newValue = value;
           },

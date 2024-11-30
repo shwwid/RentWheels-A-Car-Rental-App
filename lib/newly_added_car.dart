@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rentwheels/carInfopage.dart';
+
 class NewlyAddedCars extends StatefulWidget {
   const NewlyAddedCars({super.key});
 
@@ -78,11 +79,21 @@ class _NewlyAddedCarsState extends State<NewlyAddedCars> {
                         String brand = car['brand'] ?? 'N/A';
                         String model = car['model'] ?? 'N/A';
                         String price = car['price'] ?? 'N/A';
-                        String? imageURL = car['imageURL']; // Get the image URL from Firestore
+                        List<dynamic>? imageURLs = car['imageURLs']; // Get the imageURL array from Firestore
+                        String? mainImageURL = imageURLs != null && imageURLs.isNotEmpty
+                            ? imageURLs[0] // Select the 0 index of the array as the main image
+                            : null;
 
                         return GestureDetector(
                           onTap: () {
-                             Navigator.push(context, MaterialPageRoute(builder: (context) => CarInfoPage(CarId: car.id,)));
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CarInfoPage(
+                                  CarId: car.id,
+                                ),
+                              ),
+                            );
                           },
                           child: Container(
                             decoration: BoxDecoration(
@@ -92,7 +103,7 @@ class _NewlyAddedCarsState extends State<NewlyAddedCars> {
                                 BoxShadow(
                                   color: Colors.black12,
                                   blurRadius: 5,
-                                  offset: Offset(0, 5),
+                                  offset: const Offset(0, 5),
                                 ),
                               ],
                             ),
@@ -101,13 +112,15 @@ class _NewlyAddedCarsState extends State<NewlyAddedCars> {
                               children: [
                                 Expanded(
                                   child: Container(
-                                    //add height here for image
                                     decoration: BoxDecoration(
-                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                                      borderRadius: const BorderRadius.vertical(
+                                        top: Radius.circular(15),
+                                      ),
                                       image: DecorationImage(
-                                        image: imageURL != null && imageURL.isNotEmpty
-                                            ? NetworkImage(imageURL) // Use the image URL to fetch the image
-                                            : const AssetImage('assets/default_car.jpg') as ImageProvider,
+                                        image: mainImageURL != null && mainImageURL.isNotEmpty
+                                            ? NetworkImage(mainImageURL) // Use the selected image URL
+                                            : const AssetImage('assets/default_car.jpg')
+                                                as ImageProvider,
                                         fit: BoxFit.cover,
                                       ),
                                     ),

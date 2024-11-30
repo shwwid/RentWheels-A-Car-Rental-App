@@ -3,13 +3,14 @@ import 'package:rentwheels/data.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rentwheels/car_widget.dart';
 import 'package:rentwheels/book_car.dart';
-//import 'package:rentwheels/dealer_widget.dart';
+import 'package:rentwheels/car_type.dart';
 import 'package:rentwheels/newly_added_car.dart';
 import 'package:rentwheels/profile.dart';
 import 'package:rentwheels/date_time.dart';
 import 'package:rentwheels/notification.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+//import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Showroom extends StatefulWidget {
   const Showroom({super.key});
@@ -19,6 +20,13 @@ class Showroom extends StatefulWidget {
 }
 
 class _ShowroomState extends State<Showroom> {
+
+  final currentuser = FirebaseAuth.instance.currentUser!;
+
+  void signUserOut() {
+    FirebaseAuth.instance.signOut();
+  }
+
   List<Car> cars = getCarList();
   List<Dealer> dealers = getDealerList();
   List<carType> carTypes = getCarTypeList();
@@ -91,7 +99,7 @@ class _ShowroomState extends State<Showroom> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.only(right: 16),
+            padding: EdgeInsets.only(),
             child: GestureDetector(
               onTap: () {
                 Navigator.push(
@@ -107,18 +115,10 @@ class _ShowroomState extends State<Showroom> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.pop(
-                  context,
-                );
-              },
-              child: Icon(
-                Icons.home,
-                color: Colors.black,
-                size: 28,
-              ),
+            padding: EdgeInsets.only(),
+            child: IconButton(
+            onPressed: signUserOut,
+            icon: Icon(Icons.logout_outlined, color: Colors.black,),
             ),
           ),
         ],
@@ -279,66 +279,11 @@ class _ShowroomState extends State<Showroom> {
                   Container(
                     height: 150,
                     margin: EdgeInsets.only(bottom: 16),
-                    child: StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance.collection('CarType').snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return Center(child: CircularProgressIndicator());
-                        }
-                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                          return Center(child: Text('No car types available'));
-                        }
-
-                        return ListView(
-                          physics: BouncingScrollPhysics(),
-                          scrollDirection: Axis.horizontal,
-                          children: snapshot.data!.docs.map((doc) {
-                            return FutureBuilder<String>(
-                              future: getDownloadURL(doc['imageURL']),
-                              builder: (context, urlSnapshot) {
-                                if (urlSnapshot.connectionState == ConnectionState.waiting) {
-                                  return Container(
-                                    width: 120, // Adjusted width for smaller size
-                                    height: 80, // Adjusted height for smaller size
-                                    color: Colors.grey[300],
-                                    child: Center(child: CircularProgressIndicator()),
-                                  );
-                                }
-                                if (urlSnapshot.hasError || !urlSnapshot.hasData) {
-                                  return Container(
-                                    width: 120,
-                                    height: 80,
-                                    color: Colors.grey[300],
-                                    child: Center(child: Text('Image not available')),
-                                  );
-                                }
-
-                                return Container(
-                                  margin: EdgeInsets.all(8),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Image.network(
-                                        urlSnapshot.data!,
-                                        fit: BoxFit.cover,
-                                        height: 80, // Adjusted for smaller image
-                                        width: 120, // Adjusted for smaller image
-                                      ),
-                                      SizedBox(height: 8), // Spacing between image and text
-                                      Text(
-                                        doc['Type'], // Display the car type name from Firestore
-                                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            );
-                          }).toList(),
-                        );
-                      },
-                    ),
+                    child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    physics: BouncingScrollPhysics(),
+                    children: buildCarTypeList(),
+                  ),
                   ),
 
                 ],
@@ -367,4 +312,13 @@ class _ShowroomState extends State<Showroom> {
     }
     return list;
   }
+
+
+  List<Widget> buildCarTypeList() {
+  List<Widget> list = [];
+  for (var i = 0; i < carTypes.length; i++) {
+    list.add(buildCarType(carTypes[i], i));
+  }
+  return list;
+}
 }
