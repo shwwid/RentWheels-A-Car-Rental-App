@@ -49,6 +49,12 @@ dependencies:
   location: ^7.0.1
   phonepe_payment_sdk: ^2.0.3
   crypto: ^3.0.6
+  upi_payment_qrcode_generator: ^1.5.0
+  pdf: ^3.11.1
+  path_provider: ^2.1.5
+  flutter_email_sender: ^6.0.3
+  flutter_rating_bar: ^4.0.1
+  url_launcher: ^6.3.1
 
 
   
@@ -77,7 +83,6 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
-    - assets/default_car.jpg
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

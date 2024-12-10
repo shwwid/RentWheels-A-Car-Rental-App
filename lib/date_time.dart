@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rentwheels/constants.dart';
-
-void main() {
-  runApp(MaterialApp(
-    home: DateTimeSelectionPage(),
-  ));
-}
+import 'package:rentwheels/services/searchPage.dart';
 
 class DateTimeSelectionPage extends StatefulWidget {
+
   const DateTimeSelectionPage({super.key});
 
   @override
@@ -16,6 +12,11 @@ class DateTimeSelectionPage extends StatefulWidget {
 }
 
 class _DateTimeSelectionPageState extends State<DateTimeSelectionPage> {
+
+  /*final List<String> carTypes = ['ALL', 'SUV', 'Sedan', 'Hatchback'];
+  String selectedCarType = 'ALL';*/
+
+
   DateTime startDate = DateTime.now();
   TimeOfDay startTime = TimeOfDay(hour: 6, minute: 0);
   DateTime endDate = DateTime.now();
@@ -57,7 +58,7 @@ class _DateTimeSelectionPageState extends State<DateTimeSelectionPage> {
     }
   }
 
-  void _performSearch() {
+  /*void _performSearch() {
     // Add logic for the search functionality here
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -66,7 +67,7 @@ class _DateTimeSelectionPageState extends State<DateTimeSelectionPage> {
         ),
       ),
     );
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -232,14 +233,66 @@ class _DateTimeSelectionPageState extends State<DateTimeSelectionPage> {
                   ),
                 ],
               ),
+              //Choose car type drop down menu
+              /*SizedBox(height: 24),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(
+                  labelText: 'Car Type',
+                  labelStyle: GoogleFonts.mulish(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[600],
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[400]!, width: 1),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[400]!, width: 1),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: kPrimaryColor, width: 2), // Highlighted color
+                  ),
+                ),
+                dropdownColor: Colors.white,
+                value: selectedCarType, // Default value is 'ALL'
+                items: carTypes.map((carType) {
+                  return DropdownMenuItem(
+                    value: carType,
+                    child: Text(
+                      carType,
+                      style: GoogleFonts.mulish(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                  );
+                }).toList(),
+                icon: Icon(Icons.arrow_drop_down, color: kPrimaryColor),
+                menuMaxHeight: 200,
+                onChanged: (newValue) {
+                  setState(() {
+                    selectedCarType = newValue!;
+                  });
+                },
+              ),*/
+
               SizedBox(height: 24),
               // Search Button
               ElevatedButton(
-                onPressed: _performSearch,
+                onPressed: () {
+                  // Navigate to the search page or perform search functionality
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => SearchPage()),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: kPrimaryColor, // Set the button color to blue
-                  foregroundColor: Colors.white, // Set the text color to white
-                  padding: EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: kPrimaryColor, // Set the button color
+                  foregroundColor: Colors.white, // Set the text color
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -249,6 +302,7 @@ class _DateTimeSelectionPageState extends State<DateTimeSelectionPage> {
                   style: GoogleFonts.mulish(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
+
             ],
           ),
         ),

@@ -125,6 +125,7 @@ List<Dealer> getDealerList(){
   ];
 }
 
+// ignore: camel_case_types
 class carType {
   String car_type;
 

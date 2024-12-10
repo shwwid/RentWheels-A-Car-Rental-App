@@ -1,130 +1,77 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 const Color kPrimaryColor = Color(0xFF1A73E8);
 const Color kBackgroundColor = Color(0xFFF0F0F0);
 
-class UpdateVehicle extends StatefulWidget {
-  final String carDocId; // Pass the carDocId to the widget
+class UpdateVehiclePage extends StatefulWidget {
+  final String vehicleId; // ID of the vehicle to be updated
 
-  const UpdateVehicle({super.key, required this.carDocId});
+  const UpdateVehiclePage({Key? key, required this.vehicleId}) : super(key: key);
 
   @override
-  State<UpdateVehicle> createState() => _UpdateVehicleState();
+  State<UpdateVehiclePage> createState() => _UpdateVehiclePageState();
 }
 
-class _UpdateVehicleState extends State<UpdateVehicle> {
+class _UpdateVehiclePageState extends State<UpdateVehiclePage> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Controllers for text fields
   final TextEditingController _brandController = TextEditingController();
   final TextEditingController _modelController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _transmissionController = TextEditingController();
-  final TextEditingController _seatsController = TextEditingController();
-  final TextEditingController _mileageController = TextEditingController();
-  final TextEditingController _fuelTypeController = TextEditingController();
-  final TextEditingController _registrationNumberController = TextEditingController();
-  final TextEditingController _carTypeController = TextEditingController();
+  //final TextEditingController _descriptionController = TextEditingController();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  late User? currentUser;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    currentUser = FirebaseAuth.instance.currentUser;
-    if (widget.carDocId.isNotEmpty) {
-      _loadVehicleData();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid car document ID')),
-      );
-    }
+    _fetchVehicleData();
   }
 
-  Future<void> _loadVehicleData() async {
+  // Fetch vehicle data from Firestore
+  Future<void> _fetchVehicleData() async {
     try {
-      if (currentUser != null) {
-        // Fetch the vehicle using the carDocId directly
-        DocumentSnapshot vehicleDoc = await _firestore
-            .collection('users')
-            .doc(currentUser!.email) // or use UID: currentUser!.uid
-            .collection('Cars') // Cars collection under user
-            .doc(widget.carDocId) // Use carDocId directly
-            .get();
-
-        if (vehicleDoc.exists) {
-          var vehicleData = vehicleDoc.data() as Map<String, dynamic>;
-          setState(() {
-            _brandController.text = vehicleData['brand'] ?? '';
-            _modelController.text = vehicleData['model'] ?? '';
-            _priceController.text = vehicleData['price'] ?? '';
-            _transmissionController.text = vehicleData['transmission'] ?? '';
-            _seatsController.text = vehicleData['seats'] ?? '';
-            _mileageController.text = vehicleData['mileage'] ?? '';
-            _fuelTypeController.text = vehicleData['fuelType'] ?? '';
-            _registrationNumberController.text = vehicleData['registrationNumber'] ?? '';
-            _carTypeController.text = vehicleData['carType'] ?? ''; // Load carType
-          });
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Vehicle not found')),
-          );
-        }
+      DocumentSnapshot doc = await _firestore.collection('Cars').doc(widget.vehicleId).get();
+      if (doc.exists) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        setState(() {
+          _brandController.text = data['brand'] ?? '';
+          _modelController.text = data['model'] ?? '';
+          _priceController.text = data['price'].toString() ?? '';
+          //_descriptionController.text = data['description'] ?? '';
+          _isLoading = false;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vehicle not found.')),
+        );
+        Navigator.pop(context); // Close the page if the vehicle doesn't exist
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load vehicle data: $e')),
       );
+      Navigator.pop(context); // Close the page on error
     }
   }
 
-  Future<void> _updateVehicle() async {
-    String brand = _brandController.text.trim();
-    String model = _modelController.text.trim();
-    String price = _priceController.text.trim();
-    String transmission = _transmissionController.text.trim();
-    String seats = _seatsController.text.trim();
-    String mileage = _mileageController.text.trim();
-    String fuelType = _fuelTypeController.text.trim();
-    String registrationNumber = _registrationNumberController.text.trim();
-    String carType = _carTypeController.text.trim(); // Get the carType value
-
-    if (brand.isEmpty || model.isEmpty || price.isEmpty || transmission.isEmpty || seats.isEmpty || mileage.isEmpty || fuelType.isEmpty || registrationNumber.isEmpty || carType.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
-      );
-      return;
-    }
-
+  // Save updated vehicle data to Firestore
+  Future<void> _saveVehicleData() async {
     try {
-      if (currentUser != null) {
-        DocumentReference vehicleRef = _firestore
-            .collection('users')
-            .doc(currentUser!.email) // or use UID: currentUser!.uid
-            .collection('Cars')
-            .doc(widget.carDocId)  // Use carDocId directly
-            .collection('vehicleDetails')  // Subcollection for car details
-            .doc(registrationNumber);  // Using registration number as the document ID for clarity
+      await _firestore.collection('Cars').doc(widget.vehicleId).update({
+        'brand': _brandController.text,
+        'model': _modelController.text,
+        'price': _priceController.text,
+        //'description': _descriptionController.text,
+      });
 
-        // Update the vehicle data
-        await vehicleRef.update({
-          'brand': brand,
-          'model': model,
-          'price': price,
-          'transmission': transmission,
-          'seats': seats,
-          'mileage': mileage,
-          'fuelType': fuelType,
-          'registrationNumber': registrationNumber,
-          'carType': carType,  // Add carType to the update
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vehicle updated successfully')),
-        );
-        Navigator.pop(context);
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vehicle updated successfully.')),
+      );
+      Navigator.pop(context); // Close the page after saving
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update vehicle: $e')),
@@ -135,93 +82,116 @@ class _UpdateVehicleState extends State<UpdateVehicle> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackgroundColor,
       appBar: AppBar(
+        backgroundColor: kPrimaryColor,
         title: Text(
-          "Update Vehicle",
+          'Update Vehicle',
           style: GoogleFonts.mulish(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        backgroundColor: kPrimaryColor,
-        elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildTextField(_brandController, 'Vehicle Brand'),
-            const SizedBox(height: 16),
-            _buildTextField(_modelController, 'Vehicle Model'),
-            const SizedBox(height: 16),
-            _buildTextField(_priceController, 'Vehicle Price', keyboardType: TextInputType.number),
-            const SizedBox(height: 16),
-            _buildTextField(_transmissionController, 'Transmission Type'),
-            const SizedBox(height: 16),
-            _buildTextField(_seatsController, 'Number of Seats', keyboardType: TextInputType.number),
-            const SizedBox(height: 16),
-            _buildTextField(_mileageController, 'Mileage (km/l)', keyboardType: TextInputType.number),
-            const SizedBox(height: 16),
-            _buildTextField(_fuelTypeController, 'Fuel Type'),
-            const SizedBox(height: 16),
-            _buildTextField(_registrationNumberController, 'Registration Number'),
-            const SizedBox(height: 16),
-            _buildTextField(_carTypeController, 'Car Type'),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: _updateVehicle,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimaryColor,
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                'Update Vehicle',
-                style: GoogleFonts.mulish(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Brand Field
+                    TextField(
+                      controller: _brandController,
+                      decoration: InputDecoration(
+                        labelText: 'Brand',
+                        labelStyle: GoogleFonts.mulish(color: Colors.grey),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Model Field
+                    TextField(
+                      controller: _modelController,
+                      decoration: InputDecoration(
+                        labelText: 'Model',
+                        labelStyle: GoogleFonts.mulish(color: Colors.grey),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Price Field
+                    TextField(
+                      controller: _priceController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Price (₹)',
+                        labelStyle: GoogleFonts.mulish(color: Colors.grey),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Description Field
+                    /*TextField(
+                      controller: _descriptionController,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        labelText: 'Description',
+                        labelStyle: GoogleFonts.mulish(color: Colors.grey),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),*/
+
+                    // Save Button
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _saveVehicleData,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimaryColor,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 32,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          'Save',
+                          style: GoogleFonts.mulish(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, {TextInputType keyboardType = TextInputType.text}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            spreadRadius: 5,
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: GoogleFonts.mulish(
-            fontSize: 16,
-            color: Colors.grey,
-          ),
-          border: InputBorder.none,
-        ),
-      ),
-    );
+  @override
+  void dispose() {
+    _brandController.dispose();
+    _modelController.dispose();
+    _priceController.dispose();
+    //_descriptionController.dispose();
+    super.dispose();
   }
 }
-

@@ -17,6 +17,7 @@ class AddVehiclePage extends StatefulWidget {
 }
 
 class _AddVehiclePageState extends State<AddVehiclePage> {
+  // Controllers for input fields
   final TextEditingController _brandController = TextEditingController();
   final TextEditingController _modelController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
@@ -28,13 +29,14 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
   final TextEditingController _yearController = TextEditingController();
   final TextEditingController _carTypeController = TextEditingController();
 
+  // Firebase references
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
+  // Image picker and storage
   final List<File> _selectedImages = [];
-
-  User? get currentUser => _auth.currentUser;
+  bool _isLoading = false;
 
   Future<void> pickImages() async {
     final pickedFiles = await ImagePicker().pickMultiImage();
@@ -47,109 +49,113 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
 
   Future<List<String>> uploadImages(List<File> images) async {
     List<String> imageUrls = [];
-    try {
-      for (var image in images) {
-        String filePath = 'vehicle_images/${DateTime.now().millisecondsSinceEpoch}_${image.hashCode}.png';
-        UploadTask uploadTask = _storage.ref().child(filePath).putFile(image);
-        TaskSnapshot snapshot = await uploadTask;
-        String downloadUrl = await snapshot.ref.getDownloadURL();
-        imageUrls.add(downloadUrl);
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload one or more images: $e')),
-      );
+    for (var image in images) {
+      String filePath = 'vehicle_images/${DateTime.now().millisecondsSinceEpoch}_${image.hashCode}.png';
+      UploadTask uploadTask = _storage.ref().child(filePath).putFile(image);
+      TaskSnapshot snapshot = await uploadTask;
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      imageUrls.add(downloadUrl);
     }
     return imageUrls;
   }
 
   Future<void> addVehicle() async {
-    String brand = _brandController.text;
-    String model = _modelController.text;
-    String price = _priceController.text;
-    String transmission = _transmissionController.text;
-    String seats = _seatsController.text;
-    String mileage = _mileageController.text;
-    String fuelType = _fuelTypeController.text;
-    String registrationNumber = _registrationNumberController.text;
-    String year = _yearController.text;
-    String carType = _carTypeController.text;
-
-    if (currentUser == null || currentUser?.email == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not authenticated or missing email')),
-      );
-      return;
-    }
-
-    if (brand.isEmpty || model.isEmpty || price.isEmpty || transmission.isEmpty || seats.isEmpty || mileage.isEmpty || fuelType.isEmpty || registrationNumber.isEmpty || carType.isEmpty || _selectedImages.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields and select at least one image')),
-      );
-      return;
-    }
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
-      String userEmail = currentUser!.email!;
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not authenticated')),
+        );
+        return;
+      }
+
+      String userEmail = currentUser.email ?? '';
+      String brand = _brandController.text;
+      String model = _modelController.text;
+      String price = _priceController.text;
+      String transmission = _transmissionController.text;
+      String seats = _seatsController.text;
+      String mileage = _mileageController.text;
+      String fuelType = _fuelTypeController.text;
+      String registrationNumber = _registrationNumberController.text;
+      String year = _yearController.text;
+      String carType = _carTypeController.text;
+
+      // Validation
+      if ([
+        brand,
+        model,
+        price,
+        transmission,
+        seats,
+        mileage,
+        fuelType,
+        registrationNumber,
+        year,
+        carType
+      ].any((field) => field.isEmpty) ||
+          _selectedImages.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please fill all fields and select images')),
+        );
+        return;
+      }
+
       List<String> imageUrls = await uploadImages(_selectedImages);
 
-      if (imageUrls.isNotEmpty) {
-        DocumentReference userCarRef = await _firestore.collection('Users').doc(userEmail).collection('Cars').add({
-          'brand': brand,
-          'model': model,
-          'price': price,
-          'transmission': transmission,
-          'seats': seats,
-          'mileage': mileage,
-          'fuelType': fuelType,
-          'registrationNumber': registrationNumber,
-          'year': year,
-          'carType': carType,
-          'imageURLs': imageUrls, // Save list of image URLs
-        });
+      // Save vehicle details to Firestore
+      await _firestore.collection('Cars').add({
+        'brand': brand,
+        'model': model,
+        'price': price,
+        'transmission': transmission,
+        'seats': seats,
+        'mileage': mileage,
+        'fuelType': fuelType,
+        'registrationNumber': registrationNumber,
+        'year': year,
+        'carType': carType,
+        'owner': userEmail,
+        'imageURLs': imageUrls,
+        'bookedState': 'available',
+      });
 
-        await _firestore.collection('Cars').add({
-          'brand': brand,
-          'model': model,
-          'price': price,
-          'transmission': transmission,
-          'seats': seats,
-          'mileage': mileage,
-          'fuelType': fuelType,
-          'registrationNumber': registrationNumber,
-          'year': year,
-          'carType': carType,
-          'owner': userEmail,
-          'imageURLs': imageUrls, // Save list of image URLs
-        });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vehicle added successfully!')),
+      );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vehicle added successfully')),
-        );
-
-        // Clear input fields and reset image list
-        _brandController.clear();
-        _modelController.clear();
-        _priceController.clear();
-        _transmissionController.clear();
-        _seatsController.clear();
-        _mileageController.clear();
-        _fuelTypeController.clear();
-        _registrationNumberController.clear();
-        _yearController.clear();
-        _carTypeController.clear();
-        setState(() {
-          _selectedImages.clear();
-        });
-      }
+      // Clear inputs
+      _clearForm();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to add vehicle')),
+        SnackBar(content: Text('Error adding vehicle: $e')),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-
+  void _clearForm() {
+    _brandController.clear();
+    _modelController.clear();
+    _priceController.clear();
+    _transmissionController.clear();
+    _seatsController.clear();
+    _mileageController.clear();
+    _fuelTypeController.clear();
+    _registrationNumberController.clear();
+    _yearController.clear();
+    _carTypeController.clear();
+    setState(() {
+      _selectedImages.clear();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -158,115 +164,79 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
       appBar: AppBar(
         title: Text(
           "Add Vehicle",
-          style: GoogleFonts.mulish(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+          style: GoogleFonts.mulish(fontWeight: FontWeight.bold,
+          color: Colors.white,
           ),
         ),
         backgroundColor: kPrimaryColor,
-        elevation: 0,
-        titleTextStyle: const TextStyle(color: Colors.white),
       ),
-      resizeToAvoidBottomInset: true,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildTextField(_brandController, 'Vehicle Brand'),
-            const SizedBox(height: 16),
-            _buildTextField(_modelController, 'Vehicle Model'),
-            const SizedBox(height: 16),
-            _buildTextField(_priceController, 'Vehicle Price', keyboardType: TextInputType.number),
-            const SizedBox(height: 16),
-            _buildTextField(_transmissionController, 'Transmission Type'),
-            const SizedBox(height: 16),
-            _buildTextField(_seatsController, 'Number of Seats', keyboardType: TextInputType.number),
-            const SizedBox(height: 16),
-            _buildTextField(_mileageController, 'Mileage (km/l)', keyboardType: TextInputType.number),
-            const SizedBox(height: 16),
-            _buildTextField(_fuelTypeController, 'Fuel Type'),
-            const SizedBox(height: 16),
-            _buildTextField(_registrationNumberController, 'Registration Number'),
-            const SizedBox(height: 16),
-            _buildTextField(_yearController, 'Year'),
-            const SizedBox(height: 16),
-            _buildTextField(_carTypeController, 'Car Type'),
-            const SizedBox(height: 16),
-            _selectedImages.isEmpty
-                ? const Text('No images selected', style: TextStyle(color: Colors.red))
-                : Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _selectedImages.map((image) {
-                      return Image.file(image, height: 100, width: 100, fit: BoxFit.cover);
-                    }).toList(),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildTextField(_brandController, 'Vehicle Brand'),
+                  const SizedBox(height: 10),
+                  _buildTextField(_modelController, 'Vehicle Model'),
+                  const SizedBox(height: 10),
+                  _buildTextField(_priceController, 'Vehicle Price', TextInputType.number),
+                  const SizedBox(height: 10),
+                  _buildTextField(_transmissionController, 'Transmission Type'),
+                  const SizedBox(height: 10),
+                  _buildTextField(_seatsController, 'Number of Seats', TextInputType.number),
+                  const SizedBox(height: 10),
+                  _buildTextField(_mileageController, 'Mileage (km/l)', TextInputType.number),
+                  const SizedBox(height: 10),
+                  _buildTextField(_fuelTypeController, 'Fuel Type'),
+                  const SizedBox(height: 10),
+                  _buildTextField(_registrationNumberController, 'Registration Number'),
+                  const SizedBox(height: 10),
+                  _buildTextField(_yearController, 'Year', TextInputType.number),
+                  const SizedBox(height: 10),
+                  _buildTextField(_carTypeController, 'Car Type'),
+                  const SizedBox(height: 10),
+                  _selectedImages.isEmpty
+                      ? const Text('No images selected', style: TextStyle(color: Colors.red))
+                      : Wrap(
+                          spacing: 8,
+                          children: _selectedImages
+                              .map((image) => Image.file(image, height: 100, width: 100, fit: BoxFit.cover))
+                              .toList(),
+                        ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: pickImages,
+                    style: ElevatedButton.styleFrom(backgroundColor: kPrimaryColor),
+                    child: Text('Upload Images',
+                    style: GoogleFonts.mulish(color: Colors.white
+                      ),
+                    ),
                   ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: pickImages,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimaryColor,
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text('Pick Images', style: GoogleFonts.mulish(fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,)),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: addVehicle,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: kPrimaryColor,
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                'Add Vehicle',
-                style: GoogleFonts.mulish(
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: addVehicle,
+                    style: ElevatedButton.styleFrom(backgroundColor: kPrimaryColor),
+                    child: Text('Add Vehicle',
+                    style: GoogleFonts.mulish(color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, {TextInputType keyboardType = TextInputType.text}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            spreadRadius: 5,
-          ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: GoogleFonts.mulish(
-            fontSize: 16,
-            color: Colors.grey,
-          ),
-          border: InputBorder.none,
-        ),
+  Widget _buildTextField(TextEditingController controller, String label, [TextInputType inputType = TextInputType.text]) {
+    return TextField(
+      controller: controller,
+      keyboardType: inputType,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        filled: true,
+        fillColor: Colors.white,
       ),
     );
   }

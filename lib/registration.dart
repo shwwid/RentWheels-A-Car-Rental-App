@@ -23,33 +23,41 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  File? _selectedImage;
+  final List<File> _selectedImages = []; // List to store multiple images
 
-  Future<void> pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
+  // Function to pick multiple images
+  Future<void> pickImages() async {
+    final pickedFiles = await ImagePicker().pickMultiImage();
+    if (pickedFiles != null) {
       setState(() {
-        _selectedImage = File(pickedFile.path);
+        _selectedImages.addAll(pickedFiles.map((e) => File(e.path)).toList());
       });
     }
   }
 
-  Future<String?> uploadImage(File image) async {
+  // Upload images and get URLs
+  Future<List<String?>> uploadImages(List<File> images) async {
+    List<String?> imageUrls = [];
     try {
-      String filePath = 'user_doc/${DateTime.now().millisecondsSinceEpoch}.png';
-      UploadTask uploadTask = _storage.ref().child(filePath).putFile(image);
-      TaskSnapshot snapshot = await uploadTask;
-      return await snapshot.ref.getDownloadURL();
+      for (var image in images) {
+        String filePath = 'user_doc/${DateTime.now().millisecondsSinceEpoch}.png';
+        UploadTask uploadTask = _storage.ref().child(filePath).putFile(image);
+        TaskSnapshot snapshot = await uploadTask;
+        String? downloadURL = await snapshot.ref.getDownloadURL();
+        imageUrls.add(downloadURL);
+      }
+      return imageUrls;
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload image: $e')),
+        SnackBar(content: Text('Failed to upload images: $e')),
       );
-      return null;
+      return [];
     }
   }
 
+  // Register user in Firebase Auth and Firestore
   Future<void> registerUser() async {
-    if (_selectedImage == null) {
+    if (_selectedImages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please add your License.')),
       );
@@ -57,12 +65,13 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
 
     try {
-      String? imageUrl = await uploadImage(_selectedImage!);
-
       showDialog(
         context: context,
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
+
+      // Upload images and get URLs
+      List<String?> imageUrls = await uploadImages(_selectedImages);
 
       UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text,
@@ -73,7 +82,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         'email': _emailController.text,
         'name': _nameController.text,
         'role1': 'client',
-        'imageURL': imageUrl,
+        'imageURLs': imageUrls, // Storing image URLs in Firestore
       });
 
       Navigator.pop(context);
@@ -104,8 +113,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
   }
 
+  // Sign up with Google
   Future<void> signUpWithGoogle() async {
-    if (_selectedImage == null) {
+    if (_selectedImages.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please add your License.')),
       );
@@ -116,7 +126,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return;
 
-      String? imageUrl = await uploadImage(_selectedImage!);
+      // Upload images and get URLs
+      List<String?> imageUrls = await uploadImages(_selectedImages);
 
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
@@ -131,7 +142,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           'email': userCredential.user!.email,
           'name': userCredential.user!.displayName,
           'role1': 'client',
-          'imageURL': imageUrl,
+          'imageURLs': imageUrls, // Storing image URLs in Firestore
         });
       }
 
@@ -222,32 +233,64 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   },
                 ),
                 const SizedBox(height: 25),
-                _selectedImage == null
-                    ? const Text(
-                        'Please add your License',
-                        style: TextStyle(color: Colors.red),
+                _selectedImages.isEmpty
+                    ? Text(
+                        'Please add your License (Front & Back)',
+                        style: GoogleFonts.mulish(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
                       )
-                    : Image.file(_selectedImage!, height: 150),
+                    : Column(
+                        children: _selectedImages
+                            .map((image) => Image.file(image, height: 150))
+                            .toList(),
+                      ),
                 const SizedBox(height: 5),
                 ElevatedButton(
-                  onPressed: pickImage,
+                  onPressed: pickImages,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent, // Background color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10), // Rounded corners
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16), // Vertical padding
+                  ),
                   child: Text(
-                    'Pick Image',
-                    style: GoogleFonts.mulish(color: Colors.black, fontWeight: FontWeight.bold),
+                    'Upload Images',
+                    style: GoogleFonts.mulish(
+                      color: Colors.white, // Text color
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16, // Font size
+                    ),
                   ),
                 ),
+
                 const SizedBox(height: 10),
+
                 ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
                       registerUser();
                     }
                   },
-                  child: const Text(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey, // Background color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10), // Rounded corners
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16), // Vertical padding
+                  ),
+                  child: Text(
                     'Register',
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.mulish(
+                      color: Colors.white, // Text color
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16, // Font size
+                    ),
                   ),
                 ),
+
                 const SizedBox(height: 25),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 25.0),
@@ -276,25 +319,25 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   ),
                 ),
                 const SizedBox(height: 25),
-                GestureDetector(
-                  onTap: () {
-                    signUpWithGoogle();
-                  },
-                  child: Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: Colors.white),
-                      borderRadius: BorderRadius.circular(10),
+                ElevatedButton(
+                  onPressed: signUpWithGoogle,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red, // Background color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10), // Rounded corners
                     ),
-                    child: Center(
-                      child: Text(
-                        'Sign Up with Google',
-                        style: GoogleFonts.mulish(color: Colors.black, fontWeight: FontWeight.bold),
-                      ),
+                    padding: const EdgeInsets.symmetric(vertical: 16), // Vertical padding
+                  ),
+                  child: Text(
+                    'Sign Up with Google',
+                    style: GoogleFonts.mulish(
+                      color: Colors.white, // Text color
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16, // Font size
                     ),
                   ),
                 ),
+
               ],
             ),
           ),

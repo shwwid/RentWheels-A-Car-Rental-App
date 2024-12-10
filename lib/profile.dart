@@ -5,7 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:rentwheels/admin.dart';
 import 'package:rentwheels/components/text_box.dart';
 import 'package:rentwheels/login.dart';
-import 'package:flutter/services.dart'; // Import your admin page
+import 'package:flutter/services.dart';
+import 'package:rentwheels/services/bookings.dart'; // Import your admin page
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -17,23 +18,19 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   final currentuser = FirebaseAuth.instance.currentUser!;
 
-  void signUserOut() {
-    FirebaseAuth.instance.signOut();
-  }
-
   Future<void> editField(String field) async {
     String newValue = "";
     await showDialog(
   context: context,
   builder: (context) => AlertDialog(
-    backgroundColor: Colors.black,
-    title: const Text(
+    backgroundColor: Colors.white,
+    title: Text(
       "Change Name",
-      style: TextStyle(color: Colors.white),
+      style: GoogleFonts.mulish(color: Colors.black, fontWeight: FontWeight.bold),
     ),
     content: TextField(
       autofocus: true,
-      style: const TextStyle(color: Colors.white),
+      style: const TextStyle(color: Colors.black),
       decoration: InputDecoration(
         hintText: "Enter New $field",
         hintStyle: const TextStyle(color: Colors.grey),
@@ -49,7 +46,7 @@ class _ProfileState extends State<Profile> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+        child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
       ),
       TextButton(
         onPressed: () async {
@@ -71,7 +68,7 @@ class _ProfileState extends State<Profile> {
           }
           Navigator.pop(context);
         },
-        child: const Text('Save', style: TextStyle(color: Colors.white)),
+        child: const Text('Save', style: TextStyle(color: Colors.black)),
       ),
     ],
   ),
@@ -83,14 +80,14 @@ class _ProfileState extends State<Profile> {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.black,
-        title: const Text(
+        backgroundColor: Colors.white,
+        title: Text(
           "Change Phone Number",
-          style: TextStyle(color: Colors.white),
+          style: GoogleFonts.mulish(color: Colors.black, fontWeight: FontWeight.bold),
         ),
         content: TextField(
           autofocus: true,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.black),
           keyboardType: TextInputType.phone,
           decoration: const InputDecoration(
             hintText: "Enter New Phone Number",
@@ -103,7 +100,7 @@ class _ProfileState extends State<Profile> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white)),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           TextButton(
             onPressed: () async {
@@ -125,7 +122,7 @@ class _ProfileState extends State<Profile> {
               }
               Navigator.pop(context);
             },
-            child: const Text('Save', style: TextStyle(color: Colors.white)),
+            child: const Text('Save', style: TextStyle(color: Colors.black)),
           ),
         ],
       ),
@@ -297,28 +294,40 @@ class _ProfileState extends State<Profile> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
-                      child: userData['imageURL'] != null
-                          ? Container(
+                      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 25.0),
+                      child: userData['imageURLs'] != null && userData['imageURLs'] is List
+                          ? SizedBox(
                               height: 200,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12.0),
-                                border: Border.all(color: Colors.grey),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12.0),
-                                child: Image.network(
-                                  userData['imageURL'],
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Center(
-                                      child: Text(
-                                        'Error loading image',
-                                        style: TextStyle(color: Colors.red),
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: userData['imageURLs'].length,
+                                itemBuilder: (context, index) {
+                                  String imageUrl = userData['imageURLs'][index];
+                                  return Container(
+                                    margin: const EdgeInsets.only(right: 10),
+                                    width: 360,
+                                    height: 200, // Adjust width as needed
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(5.0),
+                                      border: Border.all(color: Colors.grey),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12.0),
+                                      child: Image.network(
+                                        imageUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return const Center(
+                                            child: Text(
+                                              'Error loading image',
+                                              style: TextStyle(color: Colors.red),
+                                            ),
+                                          );
+                                        },
                                       ),
-                                    );
-                                  },
-                                ),
+                                    ),
+                                  );
+                                },
                               ),
                             )
                           : const Center(
@@ -328,7 +337,8 @@ class _ProfileState extends State<Profile> {
                               ),
                             ),
                     ),
-                    /*Padding(
+
+                    Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -338,9 +348,14 @@ class _ProfileState extends State<Profile> {
                             borderRadius: BorderRadius.circular(12.0),
                           ),
                         ),
-                        onPressed: () => becomeAdmin(),
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => YourBookings()),
+                          );
+                        },
                         child: Text(
-                          'Rent Your Car',
+                          'Bookings & Review',
                           style: GoogleFonts.mulish(
                             fontSize: 16.0,
                             fontWeight: FontWeight.bold,
@@ -348,7 +363,7 @@ class _ProfileState extends State<Profile> {
                           ),
                         ),
                       ),
-                    ),*/
+                    ),
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
                       child: ElevatedButton(
@@ -401,7 +416,56 @@ class _ProfileState extends State<Profile> {
                             borderRadius: BorderRadius.circular(12.0),
                           ),
                         ),
-                        onPressed: () => deleteAccount(),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                backgroundColor: Colors.white,
+                                title: Text(
+                                  'Confirm Deletion',
+                                  style: GoogleFonts.mulish(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                content: Text(
+                                  'Are you sure you want to delete your account? This action cannot be undone.',
+                                  style: GoogleFonts.mulish(),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop(); // Close the dialog
+                                    },
+                                    child: Text(
+                                      'Cancel',
+                                      style: GoogleFonts.mulish(
+                                        color: Colors.grey,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color.fromARGB(255, 207, 66, 56),
+                                    ),
+                                    onPressed: () {
+                                      Navigator.of(context).pop(); // Close the dialog
+                                      deleteAccount(); // Call the deleteAccount function
+                                    },
+                                    child: Text(
+                                      'Delete',
+                                      style: GoogleFonts.mulish(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
                         child: Text(
                           'Delete Account',
                           style: GoogleFonts.mulish(
@@ -412,6 +476,7 @@ class _ProfileState extends State<Profile> {
                         ),
                       ),
                     ),
+
                   ],
                 ),
               ],

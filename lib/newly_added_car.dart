@@ -74,7 +74,7 @@ class _NewlyAddedCarsState extends State<NewlyAddedCars> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 15,
                       mainAxisSpacing: 15,
-                      childAspectRatio: 2.5 / 3.15,
+                      childAspectRatio: 1.5 / 1.75,
                       children: snapshot.data!.docs.map((car) {
                         String brand = car['brand'] ?? 'N/A';
                         String model = car['model'] ?? 'N/A';
@@ -119,7 +119,7 @@ class _NewlyAddedCarsState extends State<NewlyAddedCars> {
                                       image: DecorationImage(
                                         image: mainImageURL != null && mainImageURL.isNotEmpty
                                             ? NetworkImage(mainImageURL) // Use the selected image URL
-                                            : const AssetImage('assets/default_car.jpg')
+                                            : const AssetImage('assets/images/default_car.jpg')
                                                 as ImageProvider,
                                         fit: BoxFit.cover,
                                       ),
@@ -132,18 +132,27 @@ class _NewlyAddedCarsState extends State<NewlyAddedCars> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '$brand $model',
-                                        style: const TextStyle(
+                                        '$model',
+                                        style:GoogleFonts.mulish(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
+                                      const SizedBox(height: 5),
+                                      Text(
+                                        '$brand',
+                                        style: GoogleFonts.mulish(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        'Price: ₹${price.toString()}',
-                                        style: const TextStyle(
+                                        '₹${price.toString()}',
+                                        style: GoogleFonts.mulish(
                                           fontSize: 14,
-                                          color: Colors.black54,
+                                          color: Colors.black,
                                         ),
                                       ),
                                     ],
